@@ -1,7 +1,7 @@
 {
   "name": "ali-rds",
   "version": "1.0.0",
-  "description": "ali-rds",
+  "description": "Aliyun RDS client",
   "main": "lib/client.js",
   "files": [
     "lib/"

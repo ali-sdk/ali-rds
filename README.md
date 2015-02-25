@@ -31,15 +31,16 @@ Aliyun RDS client.
 
 Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
 
-## Install
-
-```bash
-npm install ali-oss --save
-```
-
 ## Usage
 
 @see [RDS Usage on ali-sdk](https://github.com/ali-sdk/ali-sdk/blob/master/docs/rds.md)
+
+## TODO
+
+- [ ] MySQL
+  - [x] Pool
+  - [ ] Cluster
+- [ ] SQL Server
 
 ## License
 
