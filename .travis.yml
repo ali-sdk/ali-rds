@@ -1,9 +1,19 @@
 language: node_js
+
 node_js:
-  - 'iojs-1'
-  - '0.12'
-  - '0.10'
+- iojs-1
+- '0.12'
+- '0.10'
+
 env:
   global:
-script: "npm run test-travis"
-after_script: "npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"
+  # ALI_SDK_RDS_* env
+  - secure: np6Gu8jqwZA9TMBh+2AG10G6YeTsQCFMYoIkVNhD32CpuPV5o4lD0VaKoXb83tOjzbcn1aXmfUkfe1NHG8ulJLayD3/tnDZcGiNdfqBEaFFppTF/Q0dkj8I5k7djf9uOxeqk0l3Lq0sFQ3dZOqb0Hpt7tCC58I8sRr6g7118UY4=
+  - secure: qjQ2ErTqOQ2v6JQgwmdTL1L9Xpu0wvq+teaHvoKp0ffqc4Bpdk2IcCHpSylbgJYLO8Dsox5knA62q7DjJDEVSk/0JabTsmrMiwdpI/ipzFez9Mv8lvYZe7suNKb9rcpWcqIPqQMki010tFVVQCPKhcbGIIQpijeZjRms2RiRb6w=
+  - secure: Sl/V1goTS1ot2rY59XEMP9/ZonrBCBbYpxHAOAd1plJuFfLHreJJG9ppH6jEW1bLoKvAXTpqYX3Vxn4hhOB5h2idX8b6cfxSXLRPh+aRyQVriv7uqyOr3ZnPmgq2pbdZj6KC4IE0Oej9DECAG8PReVrBkRyDIES0D9EeYXlYaFo=
+  - secure: tBQhkSxQnC69od0OIFOuz9blcdxjmEpCt3DWC4mkx+AfJqcTH2JMU4COxlprB4GsGf1ZWyPbdDuviXKLGK31TwJ+R99xNyr6wQBMJEMCxMBH7l/j4qL0zD07j9teV3OZsGlh74DfZv74I43xvtozWUrv9obWgRkPoHP9a0qB0Mo=
+  - secure: jNCqlCBSrqZNvVxxRKEXcELC8vX1AbZBr2K1NUNGBAApng0SiET+165T1Azk77O0CJnTt8vhVH/e45Nq9NnJac5LpaFEGcUbH3HOHoTSExcj+6ijn//JclrZwZDuUHogcyzf3fxfn0v+D+dZbIvcKBTyWAfwhLoN5uN1pfgzPpI=
+  - secure: El8Ge1OM0ADKiwr4XyBcL8baRnWBSlggjW7zLDKrXhN9Iz3ddyUPcMfApvZvbB4vIOy6ArJbV84TUevo6kLeBXRHwFb0tqf475HSpSvlrgaojcQCzbMLijbQI1i3hyny3S6dweyW/FdPpcH7H9bMuJq4GqhFc0dmSvdTA7gGXKY=
+
+script: npm run test-travis
+after_script: npm install coveralls@2 && cat ./coverage/lcov.info | coveralls
