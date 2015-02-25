@@ -7,13 +7,12 @@
     "lib/"
   ],
   "scripts": {
-    "test": "mocha --harmony --check-leaks -R spec -t 5000 test/*.test.js",
-    "test-cov": "node --harmony node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --check-leaks -t 5000 test/*.test.js",
-    "test-travis": "node --harmony node_modules/.bin/istanbul cover node_modules/.bin/_mocha --report lcovonly -- --check-leaks -t 5000 test/*.test.js",
+    "test": "mocha --harmony --check-leaks -R spec -t 15000 -r co-mocha test/*.test.js",
+    "test-cov": "node --harmony node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --check-leaks -t 15000 -r co-mocha test/*.test.js",
+    "test-travis": "node --harmony node_modules/.bin/istanbul cover node_modules/.bin/_mocha --report lcovonly -- --check-leaks -t 15000 -r co-mocha test/*.test.js",
     "jshint": "jshint .",
     "autod": "autod -w --prefix '~'",
-    "cnpm": "npm install --registry=https://registry.npm.taobao.org",
-    "contributors": "contributors -f plain -o AUTHORS"
+    "cnpm": "npm install --registry=https://registry.npm.taobao.org"
   },
   "dependencies": {
     "mysql": "~2.5.5"
@@ -21,7 +20,6 @@
   "devDependencies": {
     "autod": "*",
     "co-mocha": "*",
-    "contributors": "*",
     "istanbul-harmony": "*",
     "jshint": "*",
     "mocha": "*"
