@@ -153,4 +153,19 @@ describe('ali-rds.test.js', function () {
       assert.equal(data.fields.length, 5);
     });
   });
+
+  describe('getConnection()', function () {
+    it('should throw error when mysql connect fail', function* () {
+      var db = rds({
+        port: 33061
+      });
+      try {
+        yield db.getConnection();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.name, 'RDSClientGetConnectionError');
+        assert.equal(err.message, 'connect ECONNREFUSED');
+      }
+    });
+  });
 });
