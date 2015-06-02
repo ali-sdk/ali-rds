@@ -15,7 +15,7 @@
     "cnpm": "npm install --registry=https://registry.npm.taobao.org"
   },
   "dependencies": {
-    "mysql": "~2.5.5"
+    "mysql": "~2.7.0"
   },
   "devDependencies": {
     "autod": "*",
