@@ -18,7 +18,7 @@ var assert = require('assert');
 var rds = require('../');
 var config = require('./config');
 
-describe.only('ali-rds.test.js', function () {
+describe('ali-rds.test.js', function () {
   before(function* () {
     this.db = rds(config);
     yield this.db.query('truncate `ali-sdk-test-user`');
@@ -30,6 +30,41 @@ describe.only('ali-rds.test.js', function () {
       assert(data);
       assert(Array.isArray(data.rows));
       assert.equal(data.fields.length, 1);
+    });
+  });
+
+  describe('options.needFields = false', function () {
+    var options = {};
+    for (var k in config) {
+      options[k] = config[k];
+    }
+    options.needFields = false;
+    var db = rds(options);
+
+    it('should return rows only', function* () {
+      var rows = yield db.query('show tables');
+      assert(rows);
+      assert(Array.isArray(rows));
+    });
+
+    it('should connection query return rows only', function* () {
+      var conn = yield db.getConnection();
+      var rows = yield conn.query('show tables');
+      conn.release();
+      assert(rows);
+      assert(Array.isArray(rows));
+    });
+  });
+
+  describe('escape()', function () {
+    it('should client return escape string', function () {
+      assert.equal(this.db.escape('\'\"?<//\\'), '\'\\\'\\"?<//\\\\\'');
+    });
+
+    it('should connection return escape string', function* () {
+      var conn = yield this.db.getConnection();
+      assert.equal(conn.escape('\'\"?<//\\'), '\'\\\'\\"?<//\\\\\'');
+      conn.release();
     });
   });
 
