@@ -52,20 +52,60 @@ var db = rds({
 });
 ```
 
-### Queries
+### Insert
 
-- Query with arguments
+- Insert one row
 
 ```js
-var rows = yield db.query('SELECT * FROM your_table LIMIT 100');
-console.log(rows);
+var row = {
+  name: 'fengmk2',
+  otherField: 'other field value',
+  createdAt: db.literals.now, // `now()` on db server
+  // ...
+};
+var result = yield db.insert('table-name', row);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 3710,
+  serverStatus: 2,
+  warningCount: 2,
+  message: '',
+  protocol41: true,
+  changedRows: 0 }
 ```
 
-- Query with arguments
+- Insert multi rows
+
+Will execute under a transaction and auto commit.
 
 ```js
-var rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
-console.log(rows);
+var rows = [
+  {
+    name: 'fengmk1',
+    otherField: 'other field value',
+    createdAt: db.literals.now, // `now()` on db server
+    // ...
+  },
+  {
+    name: 'fengmk2',
+    otherField: 'other field value',
+    createdAt: db.literals.now, // `now()` on db server
+    // ...
+  },
+  // ...
+];
+
+var results = yield db.insert('table-name', rows);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 3840,
+  serverStatus: 2,
+  warningCount: 2,
+  message: '&Records: 2  Duplicates: 0  Warnings: 0',
+  protocol41: true,
+  changedRows: 0 }
 ```
 
 ### Transactions
@@ -99,6 +139,22 @@ try {
   // should release connection whatever
   conn.release();
 }
+```
+
+### Raw Queries
+
+- Query with arguments
+
+```js
+var rows = yield db.query('SELECT * FROM your_table LIMIT 100');
+console.log(rows);
+```
+
+- Query with arguments
+
+```js
+var rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
+console.log(rows);
 ```
 
 ## SQL Server Usage

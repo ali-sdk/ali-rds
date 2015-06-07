@@ -20,6 +20,7 @@ var config = require('./config');
 
 describe('client.test.js', function () {
   var prefix = 'prefix-' + process.version + '-';
+  var table = 'ali-sdk-test-user';
   before(function* () {
     this.db = rds(config);
     yield this.db.query('delete from `ali-sdk-test-user` where name like ?', [prefix + '%']);
@@ -261,6 +262,111 @@ describe('client.test.js', function () {
       assert(users);
       assert.equal(users.length > 2, true);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+    });
+  });
+
+  describe('insert(table, row[s])', function () {
+    it('should insert one row', function* () {
+      var result = yield this.db.insert(table, {
+        name: prefix + 'fengmk2-insert1',
+        email: prefix + 'm@fengmk2-insert.com'
+      });
+      assert.equal(result.affectedRows, 1);
+    });
+
+    it('should insert multi rows', function* () {
+      var result = yield this.db.insert(table, [
+        {
+          name: prefix + 'fengmk2-insert2',
+          email: prefix + 'm@fengmk2-insert.com'
+        },
+        {
+          name: prefix + 'fengmk2-insert3',
+          email: prefix + 'm@fengmk2-insert.com'
+        },
+      ]);
+      assert.equal(result.affectedRows, 2);
+      var row = yield this.db.get(table, {id: result.insertId});
+      assert(row);
+      assert.equal(row.id, result.insertId);
+    });
+
+    it('should insert multi fail', function* () {
+      try {
+        yield this.db.insert(table, [
+          {
+            name: prefix + 'fengmk2-insert4',
+            email: prefix + 'm@fengmk2-insert.com'
+          },
+          {
+            name: prefix + 'fengmk2-insert4',
+            email: prefix + 'm@fengmk2-insert.com'
+          },
+        ]);
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.code, 'ER_DUP_ENTRY');
+      }
+      var row = yield this.db.get(table, {name: prefix + 'fengmk2-insert4'});
+      assert(!row);
+    });
+
+    it('should part success on Duplicate key without transaction', function* () {
+      var result = yield this.db.insert(table, {
+        name: prefix + 'fengmk2-insert-no-tran',
+        email: prefix + 'm@fengmk2-insert.com'
+      });
+      assert.equal(result.affectedRows, 1);
+      var rows = yield this.db.select(table, {
+        where: {name: prefix + 'fengmk2-insert-no-tran'}
+      });
+      assert.equal(rows.length, 1);
+
+      try {
+        yield this.db.insert(table, {
+          name: prefix + 'fengmk2-insert-no-tran',
+          email: prefix + 'm@fengmk2-insert.com'
+        });
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.code, 'ER_DUP_ENTRY');
+      }
+      var rows = yield this.db.select(table, {
+        where: {name: prefix + 'fengmk2-insert-no-tran'}
+      });
+      assert.equal(rows.length, 1);
+    });
+
+    it('should all fail on Duplicate key with transaction', function* () {
+      var tran = yield this.db.beginTransaction();
+      try {
+        var result = yield tran.insert(table, {
+          name: prefix + 'fengmk2-insert-has-tran',
+          email: prefix + 'm@fengmk2-insert.com'
+        });
+        assert.equal(result.affectedRows, 1);
+        var rows = yield tran.select(table, {
+          where: {name: prefix + 'fengmk2-insert-has-tran'}
+        });
+        assert.equal(rows.length, 1);
+
+        yield tran.insert(table, {
+          name: prefix + 'fengmk2-insert-has-tran',
+          email: prefix + 'm@fengmk2-insert.com'
+        });
+
+        yield tran.commit();
+      } catch (err) {
+        yield tran.rollback();
+        assert.equal(err.code, 'ER_DUP_ENTRY');
+      } finally {
+        tran.release();
+      }
+
+      var rows = yield this.db.select(table, {
+        where: {name: prefix + 'fengmk2-insert-has-tran'}
+      });
+      assert.equal(rows.length, 0);
     });
   });
 
