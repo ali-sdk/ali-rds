@@ -110,34 +110,19 @@ console.log(result);
 
 ### Transactions
 
-- Get connection first
+beginTransaction, commit or rollback
 
 ```js
-var conn = yield db.getConnection();
-```
-
-- beginTransaction, commit or rollback
-
-```js
-var conn = yield db.getConnection();
-try {
-  yield conn.beginTransaction();
-} catch (err) {
-  conn.release();
-  throw err;
-}
+var tran = yield db.beginTransaction();
 
 try {
-  yield conn.query(insertSQL1);
-  yield conn.query(insertSQL2);
-  yield conn.commit();
+  yield tran.query(insertSQL1);
+  yield tran.query(insertSQL2);
+  yield tran.commit();
 } catch (err) {
   // error, rollback
-  yield conn.rollback(); // rollback call won't throw err
+  yield tran.rollback(); // rollback call won't throw err
   throw err;
-} finally {
-  // should release connection whatever
-  conn.release();
 }
 ```
 

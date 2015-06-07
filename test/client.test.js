@@ -74,6 +74,69 @@ describe('client.test.js', function () {
   });
 
   describe('transactions', function () {
+    it('should beginTransaction error', function* () {
+      var db = rds({});
+      try {
+        yield db.beginTransaction();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.name, 'RDSClientGetConnectionError');
+        assert.equal(err.code, 'ECONNREFUSED');
+      }
+    });
+
+    it('should throw error after transaction rollback', function* () {
+      var tran = yield this.db.beginTransaction();
+      yield tran.rollback();
+
+      try {
+        yield tran.select(table);
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+
+      try {
+        yield tran.rollback();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+
+      try {
+        yield tran.commit();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+    });
+
+    it('should throw error after transaction commit', function* () {
+      var tran = yield this.db.beginTransaction();
+      yield tran.commit();
+
+      try {
+        yield tran.select(table);
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+
+      try {
+        yield tran.commit();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+
+      try {
+        yield tran.rollback();
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'transaction was commit or rollback');
+      }
+    });
+
     it('should insert 2 rows in a transaction', function* () {
       var conn = yield this.db.getConnection();
       try {
@@ -108,22 +171,19 @@ describe('client.test.js', function () {
     });
 
     it('should use db.beginTransaction()', function* () {
-      var conn = yield this.db.beginTransaction();
+      var tran = yield this.db.beginTransaction();
       try {
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        yield tran.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
           [prefix + 'beginTransaction1', prefix + 'm@beginTransaction.com']);
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        yield tran.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
           [prefix + 'beginTransaction2', prefix + 'm@beginTransaction.com']);
-        yield conn.commit();
+        yield tran.commit();
       } catch (err) {
         // error, rollback
-        yield conn.rollback(); // rollback call won't throw err
+        yield tran.rollback(); // rollback call won't throw err
         throw err;
-      } finally {
-        // should release connection whatever
-        conn.release();
       }
 
       var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
@@ -257,11 +317,28 @@ describe('client.test.js', function () {
       assert.equal(users.length, 0);
     });
 
-    it('should list without options.where', function* () {
-      var users = yield this.db.select('ali-sdk-test-user');
+    it('should select without options.where', function* () {
+      var users = yield this.db.select(table);
       assert(users);
       assert.equal(users.length > 2, true);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+    });
+
+    it('should select with options.orders', function* () {
+      var users = yield this.db.select(table, {
+        orders: 'id'
+      });
+      assert(users[0].id < users[1].id);
+
+      var users = yield this.db.select(table, {
+        orders: [['id', 'desc'], null, 1]
+      });
+      assert(users[0].id > users[1].id);
+
+      var users = yield this.db.select(table, {
+        orders: ['id', ['name', 'foo']]
+      });
+      assert(users[0].id < users[1].id);
     });
   });
 
@@ -270,6 +347,17 @@ describe('client.test.js', function () {
       var result = yield this.db.insert(table, {
         name: prefix + 'fengmk2-insert1',
         email: prefix + 'm@fengmk2-insert.com'
+      });
+      assert.equal(result.affectedRows, 1);
+    });
+
+    it('should insert with columns', function* () {
+      var result = yield this.db.insert(table, {
+        name: prefix + 'fengmk2-insert-with-columns',
+        email: prefix + 'm@fengmk2-insert-with-columns.com',
+        ignoretitle: 'foo title'
+      }, {
+        columns: ['name', 'email']
       });
       assert.equal(result.affectedRows, 1);
     });
@@ -359,8 +447,6 @@ describe('client.test.js', function () {
       } catch (err) {
         yield tran.rollback();
         assert.equal(err.code, 'ER_DUP_ENTRY');
-      } finally {
-        tran.release();
       }
 
       var rows = yield this.db.select(table, {
@@ -372,19 +458,50 @@ describe('client.test.js', function () {
 
   describe('update(table, obj, options)', function () {
     before(function* () {
-      yield this.db.insert('ali-sdk-test-user', {
+      yield this.db.insert(table, {
         name: prefix + 'fengmk2-update',
-        email: prefix + 'm@fengmk2-update.com'
+        email: prefix + 'm@fengmk2-update.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
       });
     });
 
+    it('should throw error when cannot auto detect update condition', function* () {
+      try {
+        yield this.db.update(table, {});
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message,
+          'Can\'t not auto detect update condition, please set options.where, or make sure obj.id exists');
+      }
+    });
+
+    it('should get and update', function* () {
+      yield this.db.insert(table, {
+        name: prefix + 'fengmk2-update2',
+        email: prefix + 'm@fengmk2-update2.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      });
+
+      var user = yield this.db.get(table, {
+        name: prefix + 'fengmk2-update2',
+      });
+      user.email = prefix + 'm@fengmk2-update2-again.com';
+      var result = yield this.db.update(table, user);
+      assert.equal(result.affectedRows, 1);
+
+      var row = yield this.db.get(table, {id: user.id});
+      assert.equal(row.email, user.email);
+    });
+
     it('should update exists row', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {
+      var user = yield this.db.get(table, {
         name: prefix + 'fengmk2-update',
       });
       assert.equal(user.email, prefix + 'm@fengmk2-update.com');
 
-      var result = yield this.db.update('ali-sdk-test-user', {
+      var result = yield this.db.update(table, {
         name: prefix + 'fengmk2-update',
         email: prefix + 'm@fengmk2-update2.com',
         gmt_create: 'now()', // invalid date
@@ -396,12 +513,20 @@ describe('client.test.js', function () {
       });
       assert.equal(result.affectedRows, 1);
 
-      var user = yield this.db.get('ali-sdk-test-user', {
+      var user = yield this.db.get(table, {
         name: prefix + 'fengmk2-update',
       });
       assert.equal(user.email, prefix + 'm@fengmk2-update2.com');
       assert.equal(user.gmt_create, '0000-00-00 00:00:00');
       assert(user.gmt_modified instanceof Date);
+
+      user.email = prefix + 'm@fengmk2-update3.com';
+      var result = yield this.db.update(table, user, {
+        columns: ['email']
+      });
+      assert.equal(result.affectedRows, 1);
+      var row = yield this.db.get(table, {id: user.id});
+      assert.equal(row.email, user.email);
     });
   });
 

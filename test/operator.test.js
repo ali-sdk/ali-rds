@@ -41,4 +41,15 @@ describe('operator.test.js', function () {
       assert.equal(op.format('SET ?? = ?', ['dt', op.literals.now], true), 'SET `dt` = now()');
     });
   });
+
+  describe('_query()', function () {
+    it('should throw error when SubClass not impl', function* () {
+      var op = new Operator();
+      try {
+        yield op.query('foo');
+      } catch (err) {
+        assert.equal(err.message, 'SubClass must impl this');
+      }
+    });
+  });
 });
