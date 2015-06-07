@@ -27,25 +27,98 @@ ali-rds
 [download-image]: https://img.shields.io/npm/dm/ali-rds.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ali-rds
 
-Aliyun RDS client.
+Aliyun RDS client. Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
 
-Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
+# RDS Usage
 
-## Usage
+RDS, Relational Database Service. Equal to well know Amazon [RDS](http://aws.amazon.com/rds/).
+Support `MySQL`, `SQL Server` and `PostgreSQL`.
 
-@see [RDS Usage on ali-sdk](https://github.com/ali-sdk/ali-sdk/blob/master/docs/rds.md)
+## MySQL Usage
 
-## API
+### Create RDS instance
 
-`*` Meaning this function is a thunk.
+```js
+var rds = require('ali-sdk').rds;
+
+var db = rds({
+  host: 'your-rds-address.mysql.rds.aliyuncs.com',
+  port: 3306,
+  user: 'your-username',
+  password: 'your-password',
+  database: 'your-database-name',
+  // The maximum number of connections to create at once. (Default: 10)
+  // connectionLimit: 10,
+});
+```
+
+### Queries
+
+- Query with arguments
+
+```js
+var rows = yield db.query('SELECT * FROM your_table LIMIT 100');
+console.log(rows);
+```
+
+- Query with arguments
+
+```js
+var rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
+console.log(rows);
+```
+
+### Transactions
+
+- Get connection first
+
+```js
+var conn = yield db.getConnection();
+```
+
+- beginTransaction, commit or rollback
+
+```js
+var conn = yield db.getConnection();
+try {
+  yield conn.beginTransaction();
+} catch (err) {
+  conn.release();
+  throw err;
+}
+
+try {
+  yield conn.query(insertSQL1);
+  yield conn.query(insertSQL2);
+  yield conn.commit();
+} catch (err) {
+  // error, rollback
+  yield conn.rollback(); // rollback call won't throw err
+  throw err;
+} finally {
+  // should release connection whatever
+  conn.release();
+}
+```
+
+## SQL Server Usage
+
+TBD
+
+---
+
+## APIs
+
+`*` Meaning this function is yieldable.
 
 ### IO queries
 
 - *query(sql[, values])
-- *list(table, options)
+- *select(table, options)
 - *get(table, where, options)
 - *insert(table, obj, options)
 - *update(table, obj, options)
+- *delete(table, where)
 
 ### Utils
 
@@ -78,6 +151,7 @@ var session = new db.literals.Literal('session()');
   - [x] Pool
   - [ ] Cluster
 - [ ] SQL Server
+- [ ] PostgreSQL
 
 ## License
 

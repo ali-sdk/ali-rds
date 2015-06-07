@@ -27,29 +27,13 @@ describe('client.test.js', function () {
 
   describe('rds(options)', function () {
     it('should connect rds success', function* () {
-      var data = yield this.db.query('show tables');
-      assert(data);
-      assert(Array.isArray(data.rows));
-      assert.equal(data.fields.length, 1);
-    });
-  });
-
-  describe('options.needFields = false', function () {
-    var options = {};
-    for (var k in config) {
-      options[k] = config[k];
-    }
-    options.needFields = false;
-    var db = rds(options);
-
-    it('should return rows only', function* () {
-      var rows = yield db.query('show tables');
+      var rows = yield this.db.query('show tables');
       assert(rows);
       assert(Array.isArray(rows));
     });
 
-    it('should connection query return rows only', function* () {
-      var conn = yield db.getConnection();
+    it('should connection query return rows', function* () {
+      var conn = yield this.db.getConnection();
       var rows = yield conn.query('show tables');
       conn.release();
       assert(rows);
@@ -80,12 +64,11 @@ describe('client.test.js', function () {
     });
 
     it('should select 2 rows', function* () {
-      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
+      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
         [prefix + 'm@fengmk2.com']);
-      assert.equal(data.rows.length, 2);
-      assert.equal(data.rows[0].name, prefix + 'fengmk2');
-      assert.equal(data.rows[1].name, prefix + 'fengmk3');
-      assert.equal(data.fields.length, 5);
+      assert.equal(rows.length, 2);
+      assert.equal(rows[0].name, prefix + 'fengmk2');
+      assert.equal(rows[1].name, prefix + 'fengmk3');
     });
   });
 
@@ -116,11 +99,11 @@ describe('client.test.js', function () {
         conn.release();
       }
 
-      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id', [prefix + 'm@transaction.com']);
-      assert.equal(data.rows.length, 2);
-      assert.equal(data.rows[0].name, prefix + 'transaction1');
-      assert.equal(data.rows[1].name, prefix + 'transaction2');
-      assert.equal(data.fields.length, 5);
+      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
+        [prefix + 'm@transaction.com']);
+      assert.equal(rows.length, 2);
+      assert.equal(rows[0].name, prefix + 'transaction1');
+      assert.equal(rows[1].name, prefix + 'transaction2');
     });
 
     it('should use db.beginTransaction()', function* () {
@@ -142,11 +125,11 @@ describe('client.test.js', function () {
         conn.release();
       }
 
-      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id', [prefix + 'm@beginTransaction.com']);
-      assert.equal(data.rows.length, 2);
-      assert.equal(data.rows[0].name, prefix + 'beginTransaction1');
-      assert.equal(data.rows[1].name, prefix + 'beginTransaction2');
-      assert.equal(data.fields.length, 5);
+      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
+        [prefix + 'm@beginTransaction.com']);
+      assert.equal(rows.length, 2);
+      assert.equal(rows[0].name, prefix + 'beginTransaction1');
+      assert.equal(rows[1].name, prefix + 'beginTransaction2');
     });
 
     it('should rollback when query fail', function* () {
@@ -175,25 +158,25 @@ describe('client.test.js', function () {
         conn.release();
       }
 
-      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id', [prefix + 'm@transaction-fail.com']);
-      assert.equal(data.rows.length, 0);
-      assert.equal(data.fields.length, 5);
+      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
+        [prefix + 'm@transaction-fail.com']);
+      assert.equal(rows.length, 0);
     });
   });
 
-  describe('get(table, obj, options), list(table, options)', function () {
+  describe('get(table, obj, options), select(table, options)', function () {
     before(function* () {
       var result = yield this.db.insert('ali-sdk-test-user', {
         name: prefix + 'fengmk2-get',
         email: prefix + 'm@fengmk2-get.com'
       });
-      assert.equal(result.rows.affectedRows, 1);
+      assert.equal(result.affectedRows, 1);
 
       var result = yield this.db.insert('ali-sdk-test-user', {
         name: prefix + 'fengmk3-get',
         email: prefix + 'm@fengmk2-get.com'
       });
-      assert.equal(result.rows.affectedRows, 1);
+      assert.equal(result.affectedRows, 1);
     });
 
     it('should get exists object without columns', function* () {
@@ -233,53 +216,48 @@ describe('client.test.js', function () {
       assert.strictEqual(user, null);
     });
 
-    it('should list objects without columns', function* () {
-      var result = yield this.db.list('ali-sdk-test-user', {
+    it('should select objects without columns', function* () {
+      var users = yield this.db.select('ali-sdk-test-user', {
         where: {email: prefix + 'm@fengmk2-get.com'},
       });
-      var users = result.rows;
       assert(users);
       assert.equal(users.length, 2);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {
+      var users = yield this.db.select('ali-sdk-test-user', {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 1
       });
-      var users = result.rows;
       assert(users);
       assert.equal(users.length, 1);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {
+      var users = yield this.db.select('ali-sdk-test-user', {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 1,
         offset: 1
       });
-      var users = result.rows;
       assert(users);
       assert.equal(users.length, 1);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {
+      var users = yield this.db.select('ali-sdk-test-user', {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 10,
         offset: 100
       });
-      var users = result.rows;
       assert(users);
       assert.equal(users.length, 0);
     });
 
     it('should list without options.where', function* () {
-      var result = yield this.db.list('ali-sdk-test-user');
-      var users = result.rows;
+      var users = yield this.db.select('ali-sdk-test-user');
       assert(users);
       assert.equal(users.length > 2, true);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
@@ -310,7 +288,7 @@ describe('client.test.js', function () {
           name: prefix + 'fengmk2-update',
         }
       });
-      assert.equal(result.rows.affectedRows, 1);
+      assert.equal(result.affectedRows, 1);
 
       var user = yield this.db.get('ali-sdk-test-user', {
         name: prefix + 'fengmk2-update',
@@ -318,6 +296,70 @@ describe('client.test.js', function () {
       assert.equal(user.email, prefix + 'm@fengmk2-update2.com');
       assert.equal(user.gmt_create, '0000-00-00 00:00:00');
       assert(user.gmt_modified instanceof Date);
+    });
+  });
+
+  describe('delete(table, where)', function () {
+    before(function* () {
+      var result = yield this.db.insert('ali-sdk-test-user', {
+        name: prefix + 'fengmk2-delete',
+        email: prefix + 'm@fengmk2-delete.com'
+      });
+      assert.equal(result.affectedRows, 1);
+      assert(result.insertId > 0);
+
+      var result = yield this.db.insert('ali-sdk-test-user', {
+        name: prefix + 'fengmk3-delete',
+        email: prefix + 'm@fengmk2-delete.com'
+      });
+      assert.equal(result.affectedRows, 1);
+    });
+
+    it('should delete exists rows', function* () {
+      var result = yield this.db.delete('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete.com'});
+      assert.equal(result.affectedRows, 2);
+      assert.equal(result.insertId, 0);
+
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete.com'});
+      assert(!user);
+    });
+
+    it('should delete not exists rows', function* () {
+      var result = yield this.db.delete('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete-not-exists.com'});
+      assert.equal(result.affectedRows, 0);
+      assert.equal(result.insertId, 0);
+    });
+
+    it('should delete all rows when where = null', function* () {
+      var result = yield this.db.insert('ali-sdk-test-user', {
+        name: prefix + 'fengmk2-delete2',
+        email: prefix + 'm@fengmk2-delete2.com'
+      });
+      assert.equal(result.affectedRows, 1);
+      assert(result.insertId > 0);
+      var result = yield this.db.delete('ali-sdk-test-user');
+      assert(result.affectedRows > 0);
+      console.log('delete %d rows', result.affectedRows);
+
+      var result = yield this.db.insert('ali-sdk-test-user', {
+        name: prefix + 'fengmk2-delete3',
+        email: prefix + 'm@fengmk2-delete3.com'
+      });
+      assert.equal(result.affectedRows, 1);
+      assert(result.insertId > 0);
+      var result = yield this.db.delete('ali-sdk-test-user', null);
+      assert(result.affectedRows > 0);
+
+      var conn = yield this.db.getConnection();
+      var result = yield conn.insert('ali-sdk-test-user', {
+        name: prefix + 'fengmk2-delete3',
+        email: prefix + 'm@fengmk2-delete3.com'
+      });
+      assert.equal(result.affectedRows, 1);
+      assert(result.insertId > 0);
+      var result = yield conn.delete('ali-sdk-test-user');
+      assert(result.affectedRows > 0);
+      conn.release();
     });
   });
 
