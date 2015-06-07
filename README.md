@@ -116,8 +116,8 @@ beginTransaction, commit or rollback
 var tran = yield db.beginTransaction();
 
 try {
-  yield tran.query(insertSQL1);
-  yield tran.query(insertSQL2);
+  yield tran.insert(table, row1);
+  yield tran.update(table, row2);
   yield tran.commit();
 } catch (err) {
   // error, rollback

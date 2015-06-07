@@ -23,7 +23,7 @@ describe('client.test.js', function () {
   var table = 'ali-sdk-test-user';
   before(function* () {
     this.db = rds(config);
-    yield this.db.query('delete from `ali-sdk-test-user` where name like ?', [prefix + '%']);
+    yield this.db.query('delete from ?? where name like ?', [table, prefix + '%']);
   });
 
   describe('rds(options)', function () {
@@ -56,17 +56,17 @@ describe('client.test.js', function () {
 
   describe('query()', function () {
     before(function* () {
-      yield this.db.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+      yield this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [prefix + 'fengmk2', prefix + 'm@fengmk2.com']);
-      yield this.db.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        [table, prefix + 'fengmk2', prefix + 'm@fengmk2.com']);
+      yield this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [prefix + 'fengmk3', prefix + 'm@fengmk2.com']);
+        [table, prefix + 'fengmk3', prefix + 'm@fengmk2.com']);
     });
 
     it('should select 2 rows', function* () {
-      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
-        [prefix + 'm@fengmk2.com']);
+      var rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@fengmk2.com']);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'fengmk2');
       assert.equal(rows[1].name, prefix + 'fengmk3');
@@ -147,12 +147,12 @@ describe('client.test.js', function () {
       }
 
       try {
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [prefix + 'transaction1', prefix + 'm@transaction.com']);
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+          [table, prefix + 'transaction1', prefix + 'm@transaction.com']);
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [prefix + 'transaction2', prefix + 'm@transaction.com']);
+          [table, prefix + 'transaction2', prefix + 'm@transaction.com']);
         yield conn.commit();
       } catch (err) {
         // error, rollback
@@ -163,8 +163,8 @@ describe('client.test.js', function () {
         conn.release();
       }
 
-      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
-        [prefix + 'm@transaction.com']);
+      var rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@transaction.com']);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'transaction1');
       assert.equal(rows[1].name, prefix + 'transaction2');
@@ -173,12 +173,12 @@ describe('client.test.js', function () {
     it('should use db.beginTransaction()', function* () {
       var tran = yield this.db.beginTransaction();
       try {
-        yield tran.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        yield tran.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [prefix + 'beginTransaction1', prefix + 'm@beginTransaction.com']);
-        yield tran.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+          [table, prefix + 'beginTransaction1', prefix + 'm@beginTransaction.com']);
+        yield tran.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [prefix + 'beginTransaction2', prefix + 'm@beginTransaction.com']);
+          [table, prefix + 'beginTransaction2', prefix + 'm@beginTransaction.com']);
         yield tran.commit();
       } catch (err) {
         // error, rollback
@@ -186,8 +186,8 @@ describe('client.test.js', function () {
         throw err;
       }
 
-      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
-        [prefix + 'm@beginTransaction.com']);
+      var rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@beginTransaction.com']);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'beginTransaction1');
       assert.equal(rows[1].name, prefix + 'beginTransaction2');
@@ -203,12 +203,12 @@ describe('client.test.js', function () {
       }
 
       try {
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [prefix + 'transaction-fail1', 'm@transaction-fail.com']);
-        yield conn.query('insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified) \
+          [table, prefix + 'transaction-fail1', 'm@transaction-fail.com']);
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           valuefail(?, ?, now(), now())',
-          [prefix + 'transaction-fail12', 'm@transaction-fail.com']);
+          [table, prefix + 'transaction-fail12', 'm@transaction-fail.com']);
         yield conn.commit();
       } catch (err) {
         // error, rollback
@@ -219,21 +219,21 @@ describe('client.test.js', function () {
         conn.release();
       }
 
-      var rows = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
-        [prefix + 'm@transaction-fail.com']);
+      var rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@transaction-fail.com']);
       assert.equal(rows.length, 0);
     });
   });
 
   describe('get(table, obj, options), select(table, options)', function () {
     before(function* () {
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk2-get',
         email: prefix + 'm@fengmk2-get.com'
       });
       assert.equal(result.affectedRows, 1);
 
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk3-get',
         email: prefix + 'm@fengmk2-get.com'
       });
@@ -241,19 +241,19 @@ describe('client.test.js', function () {
     });
 
     it('should get exists object without columns', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'});
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-get.com'});
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
 
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
         orders: [['id', 'desc']]
       });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
 
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
         orders: [['id', 'desc'], 'gmt_modified', ['gmt_create', 'asc']]
       });
       assert(user);
@@ -262,7 +262,7 @@ describe('client.test.js', function () {
     });
 
     it('should get exists object with columns', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
         columns: ['id', 'name']
       });
       assert(user);
@@ -271,14 +271,14 @@ describe('client.test.js', function () {
     });
 
     it('should get null when row not exists', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get-not-exists.com'}, {
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-get-not-exists.com'}, {
         columns: ['id', 'name']
       });
       assert.strictEqual(user, null);
     });
 
     it('should select objects without columns', function* () {
-      var users = yield this.db.select('ali-sdk-test-user', {
+      var users = yield this.db.select(table, {
         where: {email: prefix + 'm@fengmk2-get.com'},
       });
       assert(users);
@@ -286,7 +286,7 @@ describe('client.test.js', function () {
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var users = yield this.db.select('ali-sdk-test-user', {
+      var users = yield this.db.select(table, {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 1
@@ -296,7 +296,7 @@ describe('client.test.js', function () {
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
-      var users = yield this.db.select('ali-sdk-test-user', {
+      var users = yield this.db.select(table, {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 1,
@@ -307,7 +307,7 @@ describe('client.test.js', function () {
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var users = yield this.db.select('ali-sdk-test-user', {
+      var users = yield this.db.select(table, {
         where: {email: prefix + 'm@fengmk2-get.com'},
         orders: [['id', 'desc']],
         limit: 10,
@@ -532,14 +532,14 @@ describe('client.test.js', function () {
 
   describe('delete(table, where)', function () {
     before(function* () {
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk2-delete',
         email: prefix + 'm@fengmk2-delete.com'
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
 
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk3-delete',
         email: prefix + 'm@fengmk2-delete.com'
       });
@@ -547,48 +547,48 @@ describe('client.test.js', function () {
     });
 
     it('should delete exists rows', function* () {
-      var result = yield this.db.delete('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete.com'});
+      var result = yield this.db.delete(table, {email: prefix + 'm@fengmk2-delete.com'});
       assert.equal(result.affectedRows, 2);
       assert.equal(result.insertId, 0);
 
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete.com'});
+      var user = yield this.db.get(table, {email: prefix + 'm@fengmk2-delete.com'});
       assert(!user);
     });
 
     it('should delete not exists rows', function* () {
-      var result = yield this.db.delete('ali-sdk-test-user', {email: prefix + 'm@fengmk2-delete-not-exists.com'});
+      var result = yield this.db.delete(table, {email: prefix + 'm@fengmk2-delete-not-exists.com'});
       assert.equal(result.affectedRows, 0);
       assert.equal(result.insertId, 0);
     });
 
     it('should delete all rows when where = null', function* () {
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk2-delete2',
         email: prefix + 'm@fengmk2-delete2.com'
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
-      var result = yield this.db.delete('ali-sdk-test-user');
+      var result = yield this.db.delete(table);
       assert(result.affectedRows > 0);
       console.log('delete %d rows', result.affectedRows);
 
-      var result = yield this.db.insert('ali-sdk-test-user', {
+      var result = yield this.db.insert(table, {
         name: prefix + 'fengmk2-delete3',
         email: prefix + 'm@fengmk2-delete3.com'
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
-      var result = yield this.db.delete('ali-sdk-test-user', null);
+      var result = yield this.db.delete(table, null);
       assert(result.affectedRows > 0);
 
       var conn = yield this.db.getConnection();
-      var result = yield conn.insert('ali-sdk-test-user', {
+      var result = yield conn.insert(table, {
         name: prefix + 'fengmk2-delete3',
         email: prefix + 'm@fengmk2-delete3.com'
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
-      var result = yield conn.delete('ali-sdk-test-user');
+      var result = yield conn.delete(table);
       assert(result.affectedRows > 0);
       conn.release();
     });
