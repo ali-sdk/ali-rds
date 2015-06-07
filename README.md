@@ -35,6 +35,43 @@ Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
 
 @see [RDS Usage on ali-sdk](https://github.com/ali-sdk/ali-sdk/blob/master/docs/rds.md)
 
+## API
+
+`*` Meaning this function is a thunk.
+
+### IO queries
+
+- *query(sql[, values])
+- *list(table, options)
+- *get(table, where, options)
+- *insert(table, obj, options)
+- *update(table, obj, options)
+
+### Utils
+
+- escape(value, stringifyObjects, timeZone)
+- escapeId(value, forbidQualified)
+- format(sql, values, stringifyObjects, timeZone)
+
+### Literals
+
+```js
+yield db.insert('user', {
+  name: 'fengmk2',
+  createdAt: db.literals.now,
+});
+
+=>
+
+INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
+```
+
+#### Custom Literal
+
+```js
+var session = new db.literals.Literal('session()');
+```
+
 ## TODO
 
 - [ ] MySQL

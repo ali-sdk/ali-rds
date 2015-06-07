@@ -1,5 +1,5 @@
 /**!
- * ali-rds - ali-rds.test.js
+ * ali-rds - client.test.js
  *
  * Copyright(c) ali-sdk and other contributors.
  * MIT Licensed
@@ -18,7 +18,7 @@ var assert = require('assert');
 var rds = require('../');
 var config = require('./config');
 
-describe('ali-rds.test.js', function () {
+describe('client.test.js', function () {
   var prefix = 'prefix-' + process.version + '-';
   before(function* () {
     this.db = rds(config);
@@ -80,7 +80,8 @@ describe('ali-rds.test.js', function () {
     });
 
     it('should select 2 rows', function* () {
-      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id', [prefix + 'm@fengmk2.com']);
+      var data = yield this.db.query('select * from `ali-sdk-test-user` where email=? order by id',
+        [prefix + 'm@fengmk2.com']);
       assert.equal(data.rows.length, 2);
       assert.equal(data.rows[0].name, prefix + 'fengmk2');
       assert.equal(data.rows[1].name, prefix + 'fengmk3');
@@ -180,7 +181,7 @@ describe('ali-rds.test.js', function () {
     });
   });
 
-  describe('get(table, obj, keys, columns, orders), list(table, obj, keys, columns, orders, limit)', function () {
+  describe('get(table, obj, options), list(table, options)', function () {
     before(function* () {
       var result = yield this.db.insert('ali-sdk-test-user', {
         name: prefix + 'fengmk2-get',
@@ -196,68 +197,96 @@ describe('ali-rds.test.js', function () {
     });
 
     it('should get exists object without columns', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, 'email');
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'});
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
 
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, 'email', null, [['id', 'desc']]);
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+        orders: [['id', 'desc']]
+      });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
 
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, 'email', null,
-        [['id', 'desc'], 'gmt_modified', ['gmt_create', 'asc']]);
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+        orders: [['id', 'desc'], 'gmt_modified', ['gmt_create', 'asc']]
+      });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
     });
 
     it('should get exists object with columns', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, [ 'email' ], ['id', 'name']);
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, {
+        columns: ['id', 'name']
+      });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'name' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
     });
 
     it('should get null when row not exists', function* () {
-      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get-not-exists.com'}, [ 'email' ], ['id', 'name']);
+      var user = yield this.db.get('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get-not-exists.com'}, {
+        columns: ['id', 'name']
+      });
       assert.strictEqual(user, null);
     });
 
     it('should list objects without columns', function* () {
-      var result = yield this.db.list('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'}, 'email');
+      var result = yield this.db.list('ali-sdk-test-user', {
+        where: {email: prefix + 'm@fengmk2-get.com'},
+      });
       var users = result.rows;
       assert(users);
       assert.equal(users.length, 2);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'},
-        'email', null, [['id', 'desc']], 1);
+      var result = yield this.db.list('ali-sdk-test-user', {
+        where: {email: prefix + 'm@fengmk2-get.com'},
+        orders: [['id', 'desc']],
+        limit: 1
+      });
       var users = result.rows;
       assert(users);
       assert.equal(users.length, 1);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'},
-        'email', null, [['id', 'desc']], 1, 1);
+      var result = yield this.db.list('ali-sdk-test-user', {
+        where: {email: prefix + 'm@fengmk2-get.com'},
+        orders: [['id', 'desc']],
+        limit: 1,
+        offset: 1
+      });
       var users = result.rows;
       assert(users);
       assert.equal(users.length, 1);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
-      var result = yield this.db.list('ali-sdk-test-user', {email: prefix + 'm@fengmk2-get.com'},
-        'email', null, [['id', 'desc']], 10, 100);
+      var result = yield this.db.list('ali-sdk-test-user', {
+        where: {email: prefix + 'm@fengmk2-get.com'},
+        orders: [['id', 'desc']],
+        limit: 10,
+        offset: 100
+      });
       var users = result.rows;
       assert(users);
       assert.equal(users.length, 0);
     });
+
+    it('should list without options.where', function* () {
+      var result = yield this.db.list('ali-sdk-test-user');
+      var users = result.rows;
+      assert(users);
+      assert.equal(users.length > 2, true);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+    });
   });
 
-  describe('update(table, obj, keys, columns)', function () {
+  describe('update(table, obj, options)', function () {
     before(function* () {
       yield this.db.insert('ali-sdk-test-user', {
         name: prefix + 'fengmk2-update',
@@ -268,20 +297,27 @@ describe('ali-rds.test.js', function () {
     it('should update exists row', function* () {
       var user = yield this.db.get('ali-sdk-test-user', {
         name: prefix + 'fengmk2-update',
-      }, 'name');
+      });
       assert.equal(user.email, prefix + 'm@fengmk2-update.com');
 
       var result = yield this.db.update('ali-sdk-test-user', {
         name: prefix + 'fengmk2-update',
         email: prefix + 'm@fengmk2-update2.com',
-        gmt_modified: 'now()',
-      }, 'name');
+        gmt_create: 'now()', // invalid date
+        gmt_modified: this.db.literals.now,
+      }, {
+        where: {
+          name: prefix + 'fengmk2-update',
+        }
+      });
       assert.equal(result.rows.affectedRows, 1);
 
       var user = yield this.db.get('ali-sdk-test-user', {
         name: prefix + 'fengmk2-update',
-      }, 'name');
+      });
       assert.equal(user.email, prefix + 'm@fengmk2-update2.com');
+      assert.equal(user.gmt_create, '0000-00-00 00:00:00');
+      assert(user.gmt_modified instanceof Date);
     });
   });
 

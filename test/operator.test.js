@@ -1,7 +1,7 @@
 /**!
  * ali-rds - test/operator.test.js
  *
- * Copyright(c) fengmk2 and other contributors.
+ * Copyright(c) ali-sdk and other contributors.
  * MIT Licensed
  *
  * Authors:
@@ -18,27 +18,27 @@ var assert = require('assert');
 var Operator = require('../lib/operator');
 
 describe('operator.test.js', function () {
-  describe('_where()', function () {
+  describe('_where(where)', function () {
     it('should get where sql', function () {
       var op = new Operator();
-      assert.equal(op._where({ id: 1, name: 'foo' }), ' WHERE `id` = 1');
-      assert.equal(op._where({ id: 1, name: 'foo' }, 'id'), op._where({ id: 1, name: 'foo' }));
-      assert.equal(op._where({ id: 1, name: 'foo' }, [ 'id' ]), op._where({ id: 1, name: 'foo' }));
-
-      assert.equal(op._where({ id: 1, name: 'foo' }, [ 'id', 'name2' ]), ' WHERE `id` = 1 AND `name2` = NULL');
-
-      assert.equal(op._where({ 'test.id': 1, name: 'foo' }, 'test.id'), ' WHERE `test`.`id` = 1');
-      assert.equal(op._where({ 'id': [1, 2], name: 'foo' }, ['id', 'name']), ' WHERE `id` IN (1, 2) AND `name` = \'foo\'');
+      assert.equal(op._where({ id: 1 }), ' WHERE `id` = 1');
+      assert.equal(op._where({ id: 1, name: 'foo' }), ' WHERE `id` = 1 AND `name` = \'foo\'');
+      assert.equal(op._where({ id: 1, name2: null }), ' WHERE `id` = 1 AND `name2` = NULL');
+      assert.equal(op._where({ 'test.id': 1 }), ' WHERE `test`.`id` = 1');
+      assert.equal(op._where({ 'id': [1, 2], name: 'foo' }), ' WHERE `id` IN (1, 2) AND `name` = \'foo\'');
       assert.equal(op._where({ 'id': [1], name: 'foo' }, ['id', 'name']), ' WHERE `id` IN (1) AND `name` = \'foo\'');
       // assert.equal(op.where({ 'test.id': new Date(), name: 'foo' }, 'test.id'), ' WHERE `test`.`id` = 1');
-
-      assert.equal(op._where({ id: 1, name: 'foo\'\"' }, 'name'), ' WHERE `name` = \'foo\\\'\\\"\'');
-      assert.equal(op._where({ id: 1, name: 'foo\'\"' }, [ 'name' ]), op._where({ id: 1, name: 'foo\'\"' }, 'name'));
-
-      assert.equal(op._where({ id: 1, name: 'foo\'\"' }, [ 'id', 'name' ]), ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\'');
-      assert.equal(op._where({ id: 1, name: 'foo\'\"' }, [ 'name', 'id' ]), ' WHERE `name` = \'foo\\\'\\\"\' AND `id` = 1');
-      assert.equal(op._where({ id: 1, name: 'foo\'\"', user: 'fengmk2' }, [ 'id', 'name', 'user' ]),
+      assert.equal(op._where({ name: 'foo\'\"' }), ' WHERE `name` = \'foo\\\'\\\"\'');
+      assert.equal(op._where({ id: 1, name: 'foo\'\"' }), ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\'');
+      assert.equal(op._where({ id: 1, name: 'foo\'\"', user: 'fengmk2' }),
         ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\' AND `user` = \'fengmk2\'');
+    });
+  });
+
+  describe('format()', function () {
+    it('should get literal string', function () {
+      var op = new Operator();
+      assert.equal(op.format('SET ?? = ?', ['dt', op.literals.now], true), 'SET `dt` = now()');
     });
   });
 });
