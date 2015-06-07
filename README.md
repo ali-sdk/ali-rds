@@ -39,9 +39,9 @@ Support `MySQL`, `SQL Server` and `PostgreSQL`.
 ### Create RDS instance
 
 ```js
-var rds = require('ali-sdk').rds;
+const rds = require('ali-sdk').rds;
 
-var db = rds({
+let db = rds({
   host: 'your-rds-address.mysql.rds.aliyuncs.com',
   port: 3306,
   user: 'your-username',
@@ -57,13 +57,13 @@ var db = rds({
 - Insert one row
 
 ```js
-var row = {
+let row = {
   name: 'fengmk2',
   otherField: 'other field value',
   createdAt: db.literals.now, // `now()` on db server
   // ...
 };
-var result = yield db.insert('table-name', row);
+let result = yield db.insert('table-name', row);
 console.log(result);
 { fieldCount: 0,
   affectedRows: 1,
@@ -80,7 +80,7 @@ console.log(result);
 Will execute under a transaction and auto commit.
 
 ```js
-var rows = [
+let rows = [
   {
     name: 'fengmk1',
     otherField: 'other field value',
@@ -96,7 +96,7 @@ var rows = [
   // ...
 ];
 
-var results = yield db.insert('table-name', rows);
+let results = yield db.insert('table-name', rows);
 console.log(result);
 { fieldCount: 0,
   affectedRows: 2,
@@ -113,7 +113,7 @@ console.log(result);
 beginTransaction, commit or rollback
 
 ```js
-var tran = yield db.beginTransaction();
+let tran = yield db.beginTransaction();
 
 try {
   yield tran.insert(table, row1);
@@ -131,14 +131,14 @@ try {
 - Query with arguments
 
 ```js
-var rows = yield db.query('SELECT * FROM your_table LIMIT 100');
+let rows = yield db.query('SELECT * FROM your_table LIMIT 100');
 console.log(rows);
 ```
 
 - Query with arguments
 
 ```js
-var rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
+let rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
 console.log(rows);
 ```
 
@@ -157,8 +157,8 @@ TBD
 - *query(sql[, values])
 - *select(table, options)
 - *get(table, where, options)
-- *insert(table, obj, options)
-- *update(table, obj, options)
+- *insert(table, row[s], options)
+- *update(table, row, options)
 - *delete(table, where)
 
 ### Utils
@@ -183,7 +183,7 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 #### Custom Literal
 
 ```js
-var session = new db.literals.Literal('session()');
+let session = new db.literals.Literal('session()');
 ```
 
 ## TODO

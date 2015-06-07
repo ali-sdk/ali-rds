@@ -1,4 +1,4 @@
-var env = process.env;
+const env = process.env;
 
 module.exports = {
   host: env.ALI_SDK_RDS_HOST || 'localhost',

@@ -14,10 +14,10 @@
  * Module dependencies.
  */
 
-var assert = require('assert');
-var mysql = require('mysql');
-var SqlString = require('../lib/sqlstring');
-var literals = require('../lib/literals');
+const assert = require('assert');
+const mysql = require('mysql');
+const SqlString = require('../lib/sqlstring');
+const literals = require('../lib/literals');
 
 describe('sqlstring.test.js', function () {
   describe('escape()', function () {
