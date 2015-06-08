@@ -93,21 +93,21 @@ describe('client.test.js', function () {
         yield tran.select(table);
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
 
       try {
         yield tran.rollback();
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
 
       try {
         yield tran.commit();
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
     });
 
@@ -119,21 +119,21 @@ describe('client.test.js', function () {
         yield tran.select(table);
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
 
       try {
         yield tran.commit();
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
 
       try {
         yield tran.rollback();
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'transaction was commit or rollback');
+        assert.equal(err.message.indexOf('transaction was commit or rollback'), 0);
       }
     });
 
@@ -328,16 +328,19 @@ describe('client.test.js', function () {
       let users = yield this.db.select(table, {
         orders: 'id'
       });
+      assert(users.length >= 2);
       assert(users[0].id < users[1].id);
 
       users = yield this.db.select(table, {
         orders: [['id', 'desc'], null, 1]
       });
+      assert(users.length >= 2);
       assert(users[0].id > users[1].id);
 
       users = yield this.db.select(table, {
         orders: ['id', ['name', 'foo']]
       });
+      assert(users.length >= 2);
       assert(users[0].id < users[1].id);
     });
   });
@@ -606,6 +609,30 @@ describe('client.test.js', function () {
         assert.equal(err.name, 'RDSClientGetConnectionError');
         assert.equal(err.message.indexOf('connect ECONNREFUSED'), 0);
       }
+    });
+  });
+
+  describe('count()', function () {
+    before(function* () {
+      yield this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
+        values(?, ?, now(), now())',
+        [table, prefix + 'fengmk2-count', prefix + 'm@fengmk2-count.com']);
+      yield this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
+        values(?, ?, now(), now())',
+        [table, prefix + 'fengmk3-count', prefix + 'm@fengmk2-count.com']);
+    });
+
+    it('should get total table rows count', function* () {
+      let count = yield this.db.count(table);
+      assert(count >= 2);
+
+      count = yield this.db.count(table, {
+        email: prefix + 'm@fengmk2-count.com'
+      });
+      assert.equal(count, 2);
+
+      count = yield this.db.count(table, { id: -1 });
+      assert.equal(count, 0);
     });
   });
 });

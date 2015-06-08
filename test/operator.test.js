@@ -48,7 +48,7 @@ describe('operator.test.js', function () {
       try {
         yield op.query('foo');
       } catch (err) {
-        assert.equal(err.message, 'SubClass must impl this');
+        assert.equal(err.message.indexOf('SubClass must impl this'), 0);
       }
     });
   });

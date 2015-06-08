@@ -160,6 +160,7 @@ TBD
 - *insert(table, row[s], options)
 - *update(table, row, options)
 - *delete(table, where)
+- *count(table, where)
 
 ### Utils
 
