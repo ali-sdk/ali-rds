@@ -240,8 +240,9 @@ We will auto commit or rollback for you.
 
 ```js
 var result = yield db.beginTransactionScope(function* (conn) {
-  yield tran.insert(table, row1);
-  yield tran.update(table, row2);
+  // don't commit or rollback by yourself
+  yield conn.insert(table, row1);
+  yield conn.update(table, row2);
   return { success: true };
 });
 // if error throw on scope, will auto rollback
