@@ -39,7 +39,7 @@ Support `MySQL`, `SQL Server` and `PostgreSQL`.
 ### Create RDS instance
 
 ```js
-const rds = require('ali-sdk').rds;
+const rds = require('ali-rds');
 
 let db = rds({
   host: 'your-rds-address.mysql.rds.aliyuncs.com',
