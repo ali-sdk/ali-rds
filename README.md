@@ -27,13 +27,165 @@ ali-rds
 [download-image]: https://img.shields.io/npm/dm/ali-rds.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ali-rds
 
-Aliyun RDS client.
+Aliyun RDS client. Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
 
-Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
+# RDS Usage
 
-## Usage
+RDS, Relational Database Service. Equal to well know Amazon [RDS](http://aws.amazon.com/rds/).
+Support `MySQL`, `SQL Server` and `PostgreSQL`.
 
-@see [RDS Usage on ali-sdk](https://github.com/ali-sdk/ali-sdk/blob/master/docs/rds.md)
+## MySQL Usage
+
+### Create RDS instance
+
+```js
+const rds = require('ali-sdk').rds;
+
+let db = rds({
+  host: 'your-rds-address.mysql.rds.aliyuncs.com',
+  port: 3306,
+  user: 'your-username',
+  password: 'your-password',
+  database: 'your-database-name',
+  // The maximum number of connections to create at once. (Default: 10)
+  // connectionLimit: 10,
+});
+```
+
+### Insert
+
+- Insert one row
+
+```js
+let row = {
+  name: 'fengmk2',
+  otherField: 'other field value',
+  createdAt: db.literals.now, // `now()` on db server
+  // ...
+};
+let result = yield db.insert('table-name', row);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 3710,
+  serverStatus: 2,
+  warningCount: 2,
+  message: '',
+  protocol41: true,
+  changedRows: 0 }
+```
+
+- Insert multi rows
+
+Will execute under a transaction and auto commit.
+
+```js
+let rows = [
+  {
+    name: 'fengmk1',
+    otherField: 'other field value',
+    createdAt: db.literals.now, // `now()` on db server
+    // ...
+  },
+  {
+    name: 'fengmk2',
+    otherField: 'other field value',
+    createdAt: db.literals.now, // `now()` on db server
+    // ...
+  },
+  // ...
+];
+
+let results = yield db.insert('table-name', rows);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 3840,
+  serverStatus: 2,
+  warningCount: 2,
+  message: '&Records: 2  Duplicates: 0  Warnings: 0',
+  protocol41: true,
+  changedRows: 0 }
+```
+
+### Transactions
+
+beginTransaction, commit or rollback
+
+```js
+let tran = yield db.beginTransaction();
+
+try {
+  yield tran.insert(table, row1);
+  yield tran.update(table, row2);
+  yield tran.commit();
+} catch (err) {
+  // error, rollback
+  yield tran.rollback(); // rollback call won't throw err
+  throw err;
+}
+```
+
+### Raw Queries
+
+- Query with arguments
+
+```js
+let rows = yield db.query('SELECT * FROM your_table LIMIT 100');
+console.log(rows);
+```
+
+- Query with arguments
+
+```js
+let rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
+console.log(rows);
+```
+
+## SQL Server Usage
+
+TBD
+
+---
+
+## APIs
+
+`*` Meaning this function is yieldable.
+
+### IO queries
+
+- *query(sql[, values])
+- *select(table, options)
+- *get(table, where, options)
+- *insert(table, row[s], options)
+- *update(table, row, options)
+- *delete(table, where)
+- *count(table, where)
+
+### Utils
+
+- escape(value, stringifyObjects, timeZone)
+- escapeId(value, forbidQualified)
+- format(sql, values, stringifyObjects, timeZone)
+
+### Literals
+
+```js
+yield db.insert('user', {
+  name: 'fengmk2',
+  createdAt: db.literals.now,
+});
+
+=>
+
+INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
+```
+
+#### Custom Literal
+
+```js
+let session = new db.literals.Literal('session()');
+```
 
 ## TODO
 
@@ -41,6 +193,7 @@ Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
   - [x] Pool
   - [ ] Cluster
 - [ ] SQL Server
+- [ ] PostgreSQL
 
 ## License
 
