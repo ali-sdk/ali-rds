@@ -1,4 +1,10 @@
 
+2.1.0 / 2015-06-08
+==================
+
+ * feat: add *beginTransactionScope(scope)
+ * docs: require ali-rds
+
 2.0.0 / 2015-06-08
 ==================
 
