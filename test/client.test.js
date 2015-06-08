@@ -225,6 +225,58 @@ describe('client.test.js', function () {
     });
   });
 
+  describe('beginTransactionScope(scope)', function () {
+    it('should beginTransactionScope() error', function* () {
+      let db = rds({});
+      try {
+        yield db.beginTransactionScope(function* () {});
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.name, 'RDSClientGetConnectionError');
+      }
+    });
+
+    it('should insert 2 rows in a transaction', function* () {
+      let result = yield this.db.beginTransactionScope(function* (conn) {
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+          values(?, ?, now(), now())',
+          [table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com']);
+        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+          values(?, ?, now(), now())',
+          [table, prefix + 'beginTransactionScope2', prefix + 'm@beginTransactionScope1.com']);
+        return true;
+      });
+
+      assert.equal(result, true);
+
+      let rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@beginTransactionScope1.com']);
+      assert.equal(rows.length, 2);
+      assert.equal(rows[0].name, prefix + 'beginTransactionScope1');
+      assert.equal(rows[1].name, prefix + 'beginTransactionScope2');
+    });
+
+    it('should rollback when query fail', function* () {
+      try {
+        yield this.db.beginTransactionScope(function* (conn) {
+          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+            values(?, ?, now(), now())',
+            [table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com']);
+          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+            valuefail(?, ?, now(), now())',
+            [table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com']);
+          return true;
+        });
+      } catch (err) {
+        assert.equal(err.code, 'ER_PARSE_ERROR');
+      }
+
+      let rows = yield this.db.query('select * from ?? where email=? order by id',
+        [table, prefix + 'm@beginTransactionScope-fail.com']);
+      assert.equal(rows.length, 0);
+    });
+  });
+
   describe('get(table, obj, options), select(table, options)', function () {
     before(function* () {
       let result = yield this.db.insert(table, {

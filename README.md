@@ -108,6 +108,111 @@ console.log(result);
   changedRows: 0 }
 ```
 
+### Update
+
+- Update a row with primary key: `id`
+
+```js
+let row = {
+  id: 123,
+  name: 'fengmk2',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+};
+let result = yield db.update('table-name', row);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 1  Changed: 1  Warnings: 0',
+  protocol41: true,
+  changedRows: 1 }
+```
+
+- Update a row with `options.where` and `options.columns`
+
+```js
+let row = {
+  name: 'fengmk2',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+};
+let result = yield db.update('table-name', row, {
+  where: { name: row.name },
+  columns: [ 'otherField', 'modifiedAt' ]
+});
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 1  Changed: 1  Warnings: 0',
+  protocol41: true,
+  changedRows: 1 }
+```
+
+### Get
+
+- Get a row
+
+```js
+let row = yield db.get('table-name', { name: 'fengmk2' });
+
+=> SELECT * FROM `table-name` WHERE `name` = 'fengmk2'
+```
+
+### Select
+
+- Select all rows
+
+```js
+let rows = yield db.select('table-name');
+
+=> SELECT * FROM `table-name`
+```
+
+- Select rows with condition
+
+```js
+let rows = yield db.select('table-name', {
+  where: {
+    type: 'javascript'
+  },
+  columns: ['author', 'title'],
+  orders: [['id', 'desc']]
+});
+
+=> SELECT `author`, `title` FROM `table-name`
+ WHERE `type` = 'javascript' ORDER BY `id` DESC
+```
+
+### Delete
+
+- Delete with condition
+
+```js
+let result = yield db.delete('table-name', {
+  name: 'fengmk2'
+});
+
+=> DELETE FROM `table-name` WHERE `name` = 'fengmk2'
+```
+
+### Count
+
+- Get count from a table with condition
+
+```js
+let count = yield db.count('table-name', {
+  type: 'javascript'
+});
+
+=> SELECT COUNT(*) AS count FROM `table-name` WHERE `type` = 'javascript';
+```
+
 ### Transactions
 
 beginTransaction, commit or rollback
@@ -124,6 +229,22 @@ try {
   yield tran.rollback(); // rollback call won't throw err
   throw err;
 }
+```
+
+#### Transaction with scope
+
+API: `*beginTransactionScope(scope)`
+
+All query run in scope will under a same transaction.
+We will auto commit or rollback for you.
+
+```js
+var result = yield db.beginTransactionScope(function* (conn) {
+  yield tran.insert(table, row1);
+  yield tran.update(table, row2);
+  return { success: true };
+});
+// if error throw on scope, will auto rollback
 ```
 
 ### Raw Queries
@@ -161,6 +282,11 @@ TBD
 - *update(table, row, options)
 - *delete(table, where)
 - *count(table, where)
+
+#### Transactions
+
+- *beginTransaction()
+- *beginTransactionScope(scope)
 
 ### Utils
 
