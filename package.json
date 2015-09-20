@@ -15,7 +15,9 @@
     "cnpm": "npm install --registry=https://registry.npm.taobao.org"
   },
   "dependencies": {
+    "array-merges": "^0.1.0",
     "debug": "~2.2.0",
+    "json-to-array": "^0.1.0",
     "mysql": "~2.7.0"
   },
   "devDependencies": {
