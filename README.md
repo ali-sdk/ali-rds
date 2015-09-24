@@ -154,6 +154,45 @@ console.log(result);
   changedRows: 1 }
 ```
 
+- Update multiple rows with each row has a primary key: `id`
+
+```js
+let rows = [{
+  id: 123,
+  name: 'fengmk2',
+  fieldA: 'fieldA value',
+}, {
+  id: 456,
+  name: 'luckydrq',
+  fieldB: 'fieldB value'
+}];
+let result = yield db.updateRows('table-name', rows);
+
+=> UPDATE `table-name`
+     SET name = CASE id
+       WHEN 123 THEN 'fengmk2'
+       WHEN 456 THEN 'luckydrq'
+     END,
+     fieldA = CASE id
+       WHEN 123 THEN 'filedA value'
+     END,
+     fieldB = CASE id
+       WHEN 456 THEN 'fieldB value'
+     END
+   WHERE id IN(123, 456)
+
+console.log(result);
+{
+  fieldCount: 0,
+  affectedRows: 2,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '',
+  protocol41: true,
+  changedRows: 2 }
+```
+
 ### Get
 
 - Get a row
