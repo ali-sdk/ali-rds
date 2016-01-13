@@ -16,12 +16,12 @@
   },
   "dependencies": {
     "debug": "~2.2.0",
-    "mysql": "~2.7.0"
+    "mysql": "~2.10.2"
   },
   "devDependencies": {
     "autod": "*",
     "co-mocha": "*",
-    "istanbul-harmony": "*",
+    "istanbul": "*",
     "jshint": "*",
     "mocha": "*"
   },
