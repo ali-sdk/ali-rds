@@ -1,6 +1,4 @@
-/**!
- * ali-rds - test/operator.test.js
- *
+/**
  * Copyright(c) ali-sdk and other contributors.
  * MIT Licensed
  *

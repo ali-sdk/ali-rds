@@ -248,6 +248,30 @@ var result = yield db.beginTransactionScope(function* (conn) {
 // if error throw on scope, will auto rollback
 ```
 
+#### Transaction on koa
+
+API: `*beginTransactionScope(scope, ctx)`
+
+Use koa's context to make sure only one active transaction on one ctx.
+
+```js
+function* foo(ctx, data1) {
+  return yield db.beginTransactionScope(function* (conn) {
+    yield conn.insert(table1, data1);
+    return { success: true };
+  }, ctx);
+}
+
+function* bar(ctx, data2) {
+  return yield db.beginTransactionScope(function* (conn) {
+    // execute foo with the same transaction scope
+    yield foo(ctx, { foo: 'bar' });
+    yield conn.insert(table2, data2);
+    return { success: true };
+  }, ctx);
+}
+```
+
 ### Raw Queries
 
 - Query with arguments
