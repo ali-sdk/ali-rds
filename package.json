@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "test": "mocha -R spec -t 15000 -r co-mocha test/*.test.js",
-    "test-cov": "istanbul cover _mocha -- -t 15000 -r co-mocha test/*.test.js",
-    "test-travis": "istanbul cover _mocha --report lcovonly -- -t 15000 -r co-mocha test/*.test.js",
+    "ci": "istanbul cover _mocha -- -t 15000 -r co-mocha test/*.test.js",
     "jshint": "jshint .",
     "autod": "autod -w --prefix '~'"
   },
