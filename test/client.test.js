@@ -212,6 +212,7 @@ describe('test/client.test.js', function () {
         // error, rollback
         yield conn.rollback(); // rollback call won't throw err
         assert.equal(err.code, 'ER_PARSE_ERROR');
+        assert(/sql: insert into/.test(err.stack), err.stack);
       } finally {
         // should release connection whatever
         conn.release();
