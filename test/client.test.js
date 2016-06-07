@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 
+const co = require('co');
 const assert = require('assert');
 const rds = require('../');
 const config = require('./config');
@@ -14,6 +15,10 @@ describe('client.test.js', function () {
   before(function* () {
     this.db = rds(config);
     yield this.db.query('delete from ?? where name like ?', [table, prefix + '%']);
+  });
+
+  after(function(done) {
+    this.db.end(done);
   });
 
   describe('rds(options)', function () {
@@ -818,6 +823,33 @@ describe('client.test.js', function () {
 
       count = yield this.db.count(table, { id: -1 });
       assert.equal(count, 0);
+    });
+  });
+
+  describe('mock query after client end', function() {
+    it('should query throw error after end', function*() {
+      const db = rds(config);
+      yield db.query('select * from ?? limit 10', [table]);
+      yield db.end();
+      const db2 = rds(config);
+
+      try {
+        yield db.query('select * from ?? limit 10', [table]);
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'Pool is closed.');
+      }
+
+      yield db2.query('select * from ?? limit 10', [table]);
+      yield db2.end();
+    });
+
+    it('should support end with callback style', function(done) {
+      const db = rds(config);
+      co(function*() {
+        yield db.query('select * from ?? limit 10', [table]);
+        db.end(done);
+      }).catch(done);
     });
   });
 });
