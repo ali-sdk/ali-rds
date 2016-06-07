@@ -13,8 +13,8 @@
     "autod": "autod -w --prefix '~'"
   },
   "dependencies": {
-    "debug": "~2.2.0",
-    "mysql": "~2.10.2"
+    "debug": "^2.2.0",
+    "mysql": "^2.10.2"
   },
   "devDependencies": {
     "autod": "*",
