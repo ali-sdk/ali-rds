@@ -1,11 +1,3 @@
-/**
- * Copyright(c) ali-sdk and other contributors.
- * MIT Licensed
- *
- * Authors:
- *   fengmk2 <m@fengmk2.com> (http://fengmk2.com)
- */
-
 'use strict';
 
 /**
@@ -16,7 +8,7 @@ const assert = require('assert');
 const rds = require('../');
 const config = require('./config');
 
-describe('test/client.test.js', function () {
+describe('client.test.js', function () {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
   before(function* () {
@@ -38,6 +30,13 @@ describe('test/client.test.js', function () {
       assert(rows);
       assert(Array.isArray(rows));
     });
+
+    it('should connection query one row', function* () {
+      let conn = yield this.db.getConnection();
+      let row = yield conn.queryOne('show tables');
+      conn.release();
+      assert(row);
+    });
   });
 
   describe('escape()', function () {
@@ -52,7 +51,7 @@ describe('test/client.test.js', function () {
     });
   });
 
-  describe('query()', function () {
+  describe('query(), queryOne()', function () {
     before(function* () {
       yield this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
@@ -68,6 +67,12 @@ describe('test/client.test.js', function () {
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'fengmk2');
       assert.equal(rows[1].name, prefix + 'fengmk3');
+    });
+
+    it('should select 1 row', function* () {
+      const row = yield this.db.queryOne('select * from ?? where email=? order by id',
+        [table, prefix + 'm@fengmk2.com']);
+      assert.equal(row.name, prefix + 'fengmk2');
     });
   });
 
@@ -322,6 +327,11 @@ describe('test/client.test.js', function () {
           yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
             values(?, ?, now(), now())',
             [table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com']);
+
+          // test query one
+          const row = yield conn.queryOne('select * from ?? where name=?', [table, prefix + 'beginTransactionScopeCtx1']);
+          assert(row);
+          assert.equal(row.name, prefix + 'beginTransactionScopeCtx1');
 
           const fooResult = yield fooInsert();
           assert.equal(fooResult, true);
