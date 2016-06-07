@@ -287,11 +287,12 @@ TBD
 
 ## APIs
 
-`*` Meaning this function is yieldable.
+- `*` Meaning this function is yieldable.
 
 ### IO queries
 
-- *query(sql[, values])
+- *query(sql[, values)
+- *queryOne(sql[, values)
 - *select(table, options)
 - *get(table, where, options)
 - *insert(table, row[s], options)
@@ -331,7 +332,7 @@ let session = new db.literals.Literal('session()');
 
 ## TODO
 
-- [ ] MySQL
+- [x] MySQL
   - [x] Pool
   - [ ] Cluster
 - [ ] SQL Server
