@@ -30,6 +30,30 @@ describe('operator.test.js', function () {
       let op = new Operator();
       assert.equal(op.format('SET ?? = ?', ['dt', op.literals.now], true), 'SET `dt` = now()');
     });
+
+    it('should get literal string by string', function () {
+      let op = new Operator();
+      assert.equal(op.format('SET name = ?', 'test'), 'SET name = \'test\'');
+    });
+
+    it('should get literal string by object', function () {
+      let op = new Operator();
+      assert.equal(op.format('SET dt = :now and name = :name and age = :age', {
+        now: op.literals.now,
+        name: 'test'
+      }), 'SET dt = now() and name = \'test\' and age = :age');
+    });
+
+    it('should get literal string by boundary', function () {
+      let op = new Operator();
+      assert.equal(op.format('SET name = ?', null), 'SET name = ?');
+      assert.equal(op.format('SET name = ?', undefined), 'SET name = ?');
+      assert.equal(op.format('SET name = ?', 0), 'SET name = 0');
+      assert.equal(op.format('SET name = ?', 1), 'SET name = 1');
+      assert.equal(op.format('SET name = ?', 'foo'), 'SET name = \'foo\'');
+      assert.equal(op.format('SET name = ?', true), 'SET name = true');
+      assert.equal(op.format('SET name = ?', false), 'SET name = false');
+    });
   });
 
   describe('_query()', function () {
