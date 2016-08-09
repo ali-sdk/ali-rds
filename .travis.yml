@@ -1,15 +1,16 @@
 sudo: false
 language: node_js
 node_js:
-  - 6
-  - 4
-env:
-  global:
-    - secure: "LdAG4NSfmRU3DEBI0byF+78BfgOqGXDfnxSMA1ER70mnvcOYlqQoKS/ieFlVP1yqDZ+Ut4RNCezBEQt3sLstQEwt8vlvf+Zf+0UbZfrukPmII2nmF1/QwMkVcU/kQc0O2OZwbcXTtgFm/c3WM3SR+jDmHo98IKDxZc08IpJQg4s="
-    - secure: "Xd6QyLFhS7pB0+ySn1nE5TsrjL6OmKxBdatuQbXMTuKTMyKqnSGSbkdbjmX0FPXfXJQTUElyShat4UWRP4QJ1tWqrRCZkMy6bOIG7IjBh44peajEMvE11Lj2cNYmBKysX2I/iXM4Dw5ayUfeO/s/+g05UC0lBwwE1ePMkxI5E2w="
-    - secure: "DSxD3Uj4H+4D3rPYRQEoXZvz8dzIdS+iEE2IT0RklIFahgDjXrOhmO+10RUbglYEKZC3F60KnMjlJXUM6RGMTvjAK5MsSuQqplQdB2nM7vX9Fx73HdhmWO/TzX2kFwcUvOkYrdB7ZtnUA3PFLh8nFvCv9YV4P1QKdwdcuh0aF/E="
-    - secure: "X715wSwfvyIvYCPYzB1cmHrKxR9w3p0mrSuRX8pjSMfwRfYoh2gd/vZAmlgue9CB0zy9WlqKQpiJdOUscCQLW8oDP9X4LZYsBCSloyOIeywpgFPAFyZda0vO4A6dP0VgSAaEl1Qfq6hKts02rg+OkYnLdgxkrVahQPPfKOkTmBU="
+  - '4'
+  - '6'
+install:
+  - npm i npminstall && npminstall
+before_script:
+  - mysql -uroot -e 'create database IF NOT EXISTS test;'
+  - mysql -uroot test < test/rds_init.sql
 script:
   - npm run ci
 after_script:
-  - npm i codecov && codecov
+  - npminstall codecov && codecov
+services:
+  - mysql

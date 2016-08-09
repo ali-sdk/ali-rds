@@ -7,10 +7,9 @@
     "lib"
   ],
   "scripts": {
-    "test": "mocha -R spec -t 15000 -r co-mocha test/*.test.js",
-    "ci": "istanbul cover _mocha -- -t 15000 -r co-mocha test/*.test.js",
-    "jshint": "jshint .",
-    "autod": "autod -w --prefix '~'"
+    "test": "mocha -R spec -t 15000 -r thunk-mocha test/*.test.js",
+    "ci": "npm run lint && istanbul cover node_modules/mocha/bin/_mocha -- -t 15000 -r thunk-mocha test/*.test.js",
+    "lint": "jshint ."
   },
   "dependencies": {
     "debug": "^2.2.0",
@@ -18,8 +17,8 @@
   },
   "devDependencies": {
     "autod": "*",
-    "co": "^4.6.0",
-    "co-mocha": "*",
+    "co": "4",
+    "thunk-mocha": "*",
     "istanbul": "*",
     "jshint": "*",
     "mocha": "*"

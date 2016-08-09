@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Module dependencies.
- */
-
 const co = require('co');
 const assert = require('assert');
 const rds = require('../');
@@ -83,7 +79,9 @@ describe('client.test.js', function () {
 
   describe('transactions', function () {
     it('should beginTransaction error', function* () {
-      let db = rds({});
+      let db = rds({
+        port: 12312,
+      });
       try {
         yield db.beginTransaction();
         throw new Error('should not run this');
@@ -236,7 +234,9 @@ describe('client.test.js', function () {
 
   describe('beginTransactionScope(scope)', function () {
     it('should beginTransactionScope() error', function* () {
-      let db = rds({});
+      let db = rds({
+        port: 12312,
+      });
       try {
         yield db.beginTransactionScope(function* () {});
         throw new Error('should not run this');
@@ -399,8 +399,6 @@ describe('client.test.js', function () {
 
             yield barInsert();
             throw new Error('should not run this');
-
-            return true;
           }, ctx);
         } catch (err) {
           assert.equal(err.code, 'ER_DUP_ENTRY');
