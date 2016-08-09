@@ -1,4 +1,10 @@
 
+2.6.0 / 2016-08-09
+==================
+
+  * feat: support query(sql, object) (#12)
+  * test: use travis ci local mysql server (#13)
+
 2.5.0 / 2016-06-07
 ==================
 
