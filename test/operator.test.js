@@ -11,6 +11,8 @@ describe('operator.test.js', function () {
   describe('_where(where)', function () {
     it('should get where sql', function () {
       let op = new Operator();
+      assert.equal(op._where(), '');
+      assert.equal(op._where({}), '');
       assert.equal(op._where({ id: 1 }), ' WHERE `id` = 1');
       assert.equal(op._where({ id: 1, name: 'foo' }), ' WHERE `id` = 1 AND `name` = \'foo\'');
       assert.equal(op._where({ id: 1, name2: null }), ' WHERE `id` = 1 AND `name2` = NULL');
