@@ -4,11 +4,21 @@ const co = require('co');
 const assert = require('assert');
 const rds = require('../');
 const config = require('./config');
+const logger = {
+  info: function (sql) {
+    this.sql = sql;
+  },
+  getSql: function () {
+    return this.sql;
+  }
+};
+const util = require('util');
 
 describe('client.test.js', function () {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
   before(function* () {
+    config.logger = logger;
     this.db = rds(config);
     yield this.db.query('delete from ?? where name like ?', [table, prefix + '%']);
   });
@@ -74,6 +84,11 @@ describe('client.test.js', function () {
       const row = yield this.db.queryOne('select * from ?? where email=? order by id',
         [table, prefix + 'm@fengmk2.com']);
       assert.equal(row.name, prefix + 'fengmk2');
+    });
+    it('should log sql', function* () {
+      yield this.db.queryOne('select * from ?? where email=? order by id',
+        [table, prefix + 'm@fengmk2.com']);
+      assert.equal(logger.getSql(), util.format('select * from %s where email=%s order by id', table, prefix + 'm@fengmk2.com'));
     });
   });
 
