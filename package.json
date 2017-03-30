@@ -12,6 +12,7 @@
     "lint": "jshint ."
   },
   "dependencies": {
+    "co-wrap-all": "^1.0.0",
     "debug": "^2.2.0",
     "mysql": "^2.10.2"
   },
