@@ -9,7 +9,7 @@
   "scripts": {
     "test": "mocha -R spec -t 15000 -r thunk-mocha test/*.test.js",
     "ci": "npm run lint && istanbul cover node_modules/mocha/bin/_mocha -- -t 15000 -r thunk-mocha test/*.test.js",
-    "lint": "jshint ."
+    "lint": "eslint ."
   },
   "dependencies": {
     "co-wrap-all": "^1.0.0",
@@ -20,10 +20,11 @@
   "devDependencies": {
     "autod": "*",
     "co": "4",
-    "thunk-mocha": "*",
+    "eslint": "^3.19.0",
+    "eslint-config-egg": "^3.2.0",
     "istanbul": "*",
-    "jshint": "*",
-    "mocha": "*"
+    "mocha": "*",
+    "thunk-mocha": "*"
   },
   "homepage": "https://github.com/ali-sdk/ali-rds",
   "repository": {

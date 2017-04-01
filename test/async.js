@@ -5,88 +5,88 @@ const assert = require('assert');
 const rds = require('../');
 const config = require('./config');
 
-describe('async.test.js', function () {
+describe('async.test.js', function() {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
-  before(async function () {
+  before(async function() {
     this.db = rds(config);
-    await this.db.query('delete from ?? where name like ?', [table, prefix + '%']);
+    await this.db.query('delete from ?? where name like ?', [ table, prefix + '%' ]);
   });
 
   after(function(done) {
     this.db.end(done);
   });
 
-  describe('rds(options)', function () {
-    it('should connect rds success', async function () {
-      let rows = await this.db.query('show tables');
+  describe('rds(options)', function() {
+    it('should connect rds success', async function() {
+      const rows = await this.db.query('show tables');
       assert(rows);
       assert(Array.isArray(rows));
     });
 
-    it('should connection query return rows', async function () {
-      let conn = await this.db.getConnection();
-      let rows = await conn.query('show tables');
+    it('should connection query return rows', async function() {
+      const conn = await this.db.getConnection();
+      const rows = await conn.query('show tables');
       conn.release();
       assert(rows);
       assert(Array.isArray(rows));
     });
 
-    it('should connection query one row', async function () {
-      let conn = await this.db.getConnection();
-      let row = await conn.queryOne('show tables');
+    it('should connection query one row', async function() {
+      const conn = await this.db.getConnection();
+      const row = await conn.queryOne('show tables');
       conn.release();
       assert(row);
     });
   });
 
-  describe('escape()', function () {
-    it('should client return escape string', function () {
+  describe('escape()', function() {
+    it('should client return escape string', function() {
       assert.equal(this.db.escape('\'\"?<//\\'), '\'\\\'\\"?<//\\\\\'');
     });
 
-    it('should connection return escape string', async function () {
-      let conn = await this.db.getConnection();
+    it('should connection return escape string', async function() {
+      const conn = await this.db.getConnection();
       assert.equal(conn.escape('\'\"?<//\\'), '\'\\\'\\"?<//\\\\\'');
       conn.release();
     });
   });
 
-  describe('query(), queryOne()', function () {
-    before(async function () {
+  describe('query(), queryOne()', function() {
+    before(async function() {
       await this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [table, prefix + 'fengmk2', prefix + 'm@fengmk2.com']);
+        [ table, prefix + 'fengmk2', prefix + 'm@fengmk2.com' ]);
       await this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [table, prefix + 'fengmk3', prefix + 'm@fengmk2.com']);
+        [ table, prefix + 'fengmk3', prefix + 'm@fengmk2.com' ]);
     });
 
-    it('should select 2 rows', async function () {
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@fengmk2.com']);
+    it('should select 2 rows', async function() {
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@fengmk2.com' ]);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'fengmk2');
       assert.equal(rows[1].name, prefix + 'fengmk3');
     });
 
-    it('should select 1 row', async function () {
+    it('should select 1 row', async function() {
       const row = await this.db.queryOne('select * from ?? where email=? order by id',
-        [table, prefix + 'm@fengmk2.com']);
+        [ table, prefix + 'm@fengmk2.com' ]);
       assert.equal(row.name, prefix + 'fengmk2');
     });
 
     it('should support promise', function() {
       return this.db.queryOne('select * from ?? where email=? order by id',
-        [table, prefix + 'm@fengmk2.com']).then(row => {
+        [ table, prefix + 'm@fengmk2.com' ]).then(row => {
           assert.equal(row.name, prefix + 'fengmk2');
         });
     });
   });
 
-  describe('transactions', function () {
-    it('should beginTransaction error', async function () {
-      let db = rds({
+  describe('transactions', function() {
+    it('should beginTransaction error', async function() {
+      const db = rds({
         port: 12312,
       });
       try {
@@ -98,8 +98,8 @@ describe('async.test.js', function () {
       }
     });
 
-    it('should throw error after transaction rollback', async function () {
-      let tran = await this.db.beginTransaction();
+    it('should throw error after transaction rollback', async function() {
+      const tran = await this.db.beginTransaction();
       await tran.rollback();
 
       try {
@@ -124,8 +124,8 @@ describe('async.test.js', function () {
       }
     });
 
-    it('should throw error after transaction commit', async function () {
-      let tran = await this.db.beginTransaction();
+    it('should throw error after transaction commit', async function() {
+      const tran = await this.db.beginTransaction();
       await tran.commit();
 
       try {
@@ -150,8 +150,8 @@ describe('async.test.js', function () {
       }
     });
 
-    it('should insert 2 rows in a transaction', async function () {
-      let conn = await this.db.getConnection();
+    it('should insert 2 rows in a transaction', async function() {
+      const conn = await this.db.getConnection();
       try {
         await conn.beginTransaction();
       } catch (err) {
@@ -162,10 +162,10 @@ describe('async.test.js', function () {
       try {
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'transaction1', prefix + 'm@transaction.com']);
+          [ table, prefix + 'transaction1', prefix + 'm@transaction.com' ]);
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'transaction2', prefix + 'm@transaction.com']);
+          [ table, prefix + 'transaction2', prefix + 'm@transaction.com' ]);
         await conn.commit();
       } catch (err) {
         // error, rollback
@@ -176,22 +176,22 @@ describe('async.test.js', function () {
         conn.release();
       }
 
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@transaction.com']);
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@transaction.com' ]);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'transaction1');
       assert.equal(rows[1].name, prefix + 'transaction2');
     });
 
-    it('should use db.beginTransaction()', async function () {
-      let tran = await this.db.beginTransaction();
+    it('should use db.beginTransaction()', async function() {
+      const tran = await this.db.beginTransaction();
       try {
         await tran.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'beginTransaction1', prefix + 'm@beginTransaction.com']);
+          [ table, prefix + 'beginTransaction1', prefix + 'm@beginTransaction.com' ]);
         await tran.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'beginTransaction2', prefix + 'm@beginTransaction.com']);
+          [ table, prefix + 'beginTransaction2', prefix + 'm@beginTransaction.com' ]);
         await tran.commit();
       } catch (err) {
         // error, rollback
@@ -199,15 +199,15 @@ describe('async.test.js', function () {
         throw err;
       }
 
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@beginTransaction.com']);
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginTransaction.com' ]);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'beginTransaction1');
       assert.equal(rows[1].name, prefix + 'beginTransaction2');
     });
 
-    it('should rollback when query fail', async function () {
-      let conn = await this.db.getConnection();
+    it('should rollback when query fail', async function() {
+      const conn = await this.db.getConnection();
       try {
         await conn.beginTransaction();
       } catch (err) {
@@ -218,10 +218,10 @@ describe('async.test.js', function () {
       try {
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'transaction-fail1', 'm@transaction-fail.com']);
+          [ table, prefix + 'transaction-fail1', 'm@transaction-fail.com' ]);
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           valuefail(?, ?, now(), now())',
-          [table, prefix + 'transaction-fail12', 'm@transaction-fail.com']);
+          [ table, prefix + 'transaction-fail12', 'm@transaction-fail.com' ]);
         await conn.commit();
       } catch (err) {
         // error, rollback
@@ -233,115 +233,117 @@ describe('async.test.js', function () {
         conn.release();
       }
 
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@transaction-fail.com']);
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@transaction-fail.com' ]);
       assert.equal(rows.length, 0);
     });
   });
 
-  describe('beginTransactionScope(scope)', function () {
-    it('should beginTransactionScope() error', async function () {
-      let db = rds({
+  describe('beginTransactionScope(scope)', function() {
+    it('should beginTransactionScope() error', async function() {
+      const db = rds({
         port: 12312,
       });
       try {
-        await db.beginTransactionScope(async function () {});
+        await db.beginTransactionScope(async function() {
+          // do nothing
+        });
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.name, 'RDSClientGetConnectionError');
       }
     });
 
-    it('should insert 2 rows in a transaction', async function () {
-      let result = await this.db.beginTransactionScope(async function (conn) {
+    it('should insert 2 rows in a transaction', async function() {
+      const result = await this.db.beginTransactionScope(async function(conn) {
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com']);
+          [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
         await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
           values(?, ?, now(), now())',
-          [table, prefix + 'beginTransactionScope2', prefix + 'm@beginTransactionScope1.com']);
+          [ table, prefix + 'beginTransactionScope2', prefix + 'm@beginTransactionScope1.com' ]);
         return true;
       });
 
       assert.equal(result, true);
 
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@beginTransactionScope1.com']);
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginTransactionScope1.com' ]);
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'beginTransactionScope1');
       assert.equal(rows[1].name, prefix + 'beginTransactionScope2');
     });
 
-    it('should rollback when query fail', async function () {
+    it('should rollback when query fail', async function() {
       try {
-        await this.db.beginTransactionScope(async function (conn) {
+        await this.db.beginTransactionScope(async function(conn) {
           await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
             values(?, ?, now(), now())',
-            [table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com']);
+            [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com' ]);
           await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
             valuefail(?, ?, now(), now())',
-            [table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com']);
+            [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
           return true;
         });
       } catch (err) {
         assert.equal(err.code, 'ER_PARSE_ERROR');
       }
 
-      let rows = await this.db.query('select * from ?? where email=? order by id',
-        [table, prefix + 'm@beginTransactionScope-fail.com']);
+      const rows = await this.db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginTransactionScope-fail.com' ]);
       assert.equal(rows.length, 0);
     });
 
     describe('beginTransactionScope(fn, ctx)', function() {
-      it('should insert 7 rows in a transaction with ctx', async function () {
+      it('should insert 7 rows in a transaction with ctx', async function() {
         const ctx = {};
         const db = this.db;
 
         async function hiInsert() {
-          return await db.beginTransactionScope(async function (conn) {
+          return await db.beginTransactionScope(async function(conn) {
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScopeCtx1.com']);
+              [ table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScopeCtx1.com' ]);
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScopeCtx1.com']);
+              [ table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScopeCtx1.com' ]);
             return true;
           }, ctx);
         }
 
         async function fooInsert() {
-          return await db.beginTransactionScope(async function (conn) {
+          return await db.beginTransactionScope(async function(conn) {
             await hiInsert();
 
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScopeCtx5', prefix + 'm@beginTransactionScopeCtx1.com']);
+              [ table, prefix + 'beginTransactionScopeCtx5', prefix + 'm@beginTransactionScopeCtx1.com' ]);
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScopeCtx6', prefix + 'm@beginTransactionScopeCtx1.com']);
+              [ table, prefix + 'beginTransactionScopeCtx6', prefix + 'm@beginTransactionScopeCtx1.com' ]);
             return true;
           }, ctx);
         }
 
         async function barInsert() {
-          return await db.beginTransactionScope(async function (conn) {
+          return await db.beginTransactionScope(async function(conn) {
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScopeCtx7', prefix + 'm@beginTransactionScopeCtx1.com']);
+              [ table, prefix + 'beginTransactionScopeCtx7', prefix + 'm@beginTransactionScopeCtx1.com' ]);
             return true;
           }, ctx);
         }
 
-        const result = await db.beginTransactionScope(async function (conn) {
+        const result = await db.beginTransactionScope(async function(conn) {
           await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
             values(?, ?, now(), now())',
-            [table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScopeCtx1.com']);
+            [ table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScopeCtx1.com' ]);
           await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
             values(?, ?, now(), now())',
-            [table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com']);
+            [ table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com' ]);
 
           // test query one
-          const row = await conn.queryOne('select * from ?? where name=?', [table, prefix + 'beginTransactionScopeCtx1']);
+          const row = await conn.queryOne('select * from ?? where name=?', [ table, prefix + 'beginTransactionScopeCtx1' ]);
           assert(row);
           assert.equal(row.name, prefix + 'beginTransactionScopeCtx1');
 
@@ -356,7 +358,7 @@ describe('async.test.js', function () {
         assert.equal(result, true);
 
         const rows = await db.query('select * from ?? where email=? order by id',
-          [table, prefix + 'm@beginTransactionScopeCtx1.com']);
+          [ table, prefix + 'm@beginTransactionScopeCtx1.com' ]);
         assert.equal(rows.length, 7);
         assert.equal(rows[0].name, prefix + 'beginTransactionScopeCtx1');
         assert.equal(rows[1].name, prefix + 'beginTransactionScopeCtx2');
@@ -369,40 +371,40 @@ describe('async.test.js', function () {
         assert.equal(ctx._transactionScopeCount, 0);
       });
 
-      it('should auto rollback on fail', async function () {
+      it('should auto rollback on fail', async function() {
         const ctx = {};
         const db = this.db;
 
         async function fooInsert() {
-          return await db.beginTransactionScope(async function (conn) {
+          return await db.beginTransactionScope(async function(conn) {
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+              [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+              [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
             return true;
           }, ctx);
         }
 
         async function barInsert() {
-          return await db.beginTransactionScope(async function (conn) {
+          return await db.beginTransactionScope(async function(conn) {
             await fooInsert();
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScope-ctx-fail3', prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+              [ table, prefix + 'beginTransactionScope-ctx-fail3', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
             return true;
           }, ctx);
         }
 
         try {
-          await db.beginTransactionScope(async function (conn) {
+          await db.beginTransactionScope(async function(conn) {
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+              [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
             await conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
               values(?, ?, now(), now())',
-              [table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+              [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
 
             await barInsert();
             throw new Error('should not run this');
@@ -412,7 +414,7 @@ describe('async.test.js', function () {
         }
 
         const rows = await db.query('select * from ?? where email=? order by id',
-          [table, prefix + 'm@beginTransactionScope-ctx-fail1.com']);
+          [ table, prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
         assert.equal(rows.length, 0);
         assert.equal(ctx._transactionConnection, null);
         assert.equal(ctx._transactionScopeCount, 3);
@@ -420,61 +422,61 @@ describe('async.test.js', function () {
     });
   });
 
-  describe('get(table, obj, options), select(table, options)', function () {
-    before(async function () {
+  describe('get(table, obj, options), select(table, options)', function() {
+    before(async function() {
       let result = await this.db.insert(table, {
         name: prefix + 'fengmk2-get',
-        email: prefix + 'm@fengmk2-get.com'
+        email: prefix + 'm@fengmk2-get.com',
       });
       assert.equal(result.affectedRows, 1);
 
       result = await this.db.insert(table, {
         name: prefix + 'fengmk3-get',
-        email: prefix + 'm@fengmk2-get.com'
+        email: prefix + 'm@fengmk2-get.com',
       });
       assert.equal(result.affectedRows, 1);
     });
 
-    it('should get exists object without columns', async function () {
-      let user = await this.db.get(table, {email: prefix + 'm@fengmk2-get.com'});
+    it('should get exists object without columns', async function() {
+      let user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
 
-      user = await this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
-        orders: [['id', 'desc']]
+      user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
+        orders: [[ 'id', 'desc' ]],
       });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
 
-      user = await this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
-        orders: [['id', 'desc'], 'gmt_modified', ['gmt_create', 'asc']]
+      user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
+        orders: [[ 'id', 'desc' ], 'gmt_modified', [ 'gmt_create', 'asc' ]],
       });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
     });
 
-    it('should get exists object with columns', async function () {
-      let user = await this.db.get(table, {email: prefix + 'm@fengmk2-get.com'}, {
-        columns: ['id', 'name']
+    it('should get exists object with columns', async function() {
+      const user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
+        columns: [ 'id', 'name' ],
       });
       assert(user);
       assert.deepEqual(Object.keys(user), [ 'id', 'name' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
     });
 
-    it('should get null when row not exists', async function () {
-      let user = await this.db.get(table, {email: prefix + 'm@fengmk2-get-not-exists.com'}, {
-        columns: ['id', 'name']
+    it('should get null when row not exists', async function() {
+      const user = await this.db.get(table, { email: prefix + 'm@fengmk2-get-not-exists.com' }, {
+        columns: [ 'id', 'name' ],
       });
       assert.strictEqual(user, null);
     });
 
-    it('should select objects without columns', async function () {
+    it('should select objects without columns', async function() {
       let users = await this.db.select(table, {
-        where: {email: prefix + 'm@fengmk2-get.com'},
+        where: { email: prefix + 'm@fengmk2-get.com' },
       });
       assert(users);
       assert.equal(users.length, 2);
@@ -482,9 +484,9 @@ describe('async.test.js', function () {
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = await this.db.select(table, {
-        where: {email: prefix + 'm@fengmk2-get.com'},
-        orders: [['id', 'desc']],
-        limit: 1
+        where: { email: prefix + 'm@fengmk2-get.com' },
+        orders: [[ 'id', 'desc' ]],
+        limit: 1,
       });
       assert(users);
       assert.equal(users.length, 1);
@@ -492,10 +494,10 @@ describe('async.test.js', function () {
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
       users = await this.db.select(table, {
-        where: {email: prefix + 'm@fengmk2-get.com'},
-        orders: [['id', 'desc']],
+        where: { email: prefix + 'm@fengmk2-get.com' },
+        orders: [[ 'id', 'desc' ]],
         limit: 1,
-        offset: 1
+        offset: 1,
       });
       assert(users);
       assert.equal(users.length, 1);
@@ -503,142 +505,142 @@ describe('async.test.js', function () {
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = await this.db.select(table, {
-        where: {email: prefix + 'm@fengmk2-get.com'},
-        orders: [['id', 'desc']],
+        where: { email: prefix + 'm@fengmk2-get.com' },
+        orders: [[ 'id', 'desc' ]],
         limit: 10,
-        offset: 100
+        offset: 100,
       });
       assert(users);
       assert.equal(users.length, 0);
     });
 
-    it('should select without options.where', async function () {
-      let users = await this.db.select(table);
+    it('should select without options.where', async function() {
+      const users = await this.db.select(table);
       assert(users);
       assert.equal(users.length > 2, true);
       assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
     });
 
-    it('should select with options.orders', async function () {
+    it('should select with options.orders', async function() {
       let users = await this.db.select(table, {
-        orders: 'id'
+        orders: 'id',
       });
       assert(users.length >= 2);
       assert(users[0].id < users[1].id);
 
       users = await this.db.select(table, {
-        orders: [['id', 'desc'], null, 1]
+        orders: [[ 'id', 'desc' ], null, 1 ],
       });
       assert(users.length >= 2);
       assert(users[0].id > users[1].id);
 
       users = await this.db.select(table, {
-        orders: ['id', ['name', 'foo']]
+        orders: [ 'id', [ 'name', 'foo' ]],
       });
       assert(users.length >= 2);
       assert(users[0].id < users[1].id);
     });
   });
 
-  describe('insert(table, row[s])', function () {
-    it('should insert one row', async function () {
-      let result = await this.db.insert(table, {
+  describe('insert(table, row[s])', function() {
+    it('should insert one row', async function() {
+      const result = await this.db.insert(table, {
         name: prefix + 'fengmk2-insert1',
-        email: prefix + 'm@fengmk2-insert.com'
+        email: prefix + 'm@fengmk2-insert.com',
       });
       assert.equal(result.affectedRows, 1);
     });
 
-    it('should insert with columns', async function () {
-      let result = await this.db.insert(table, {
+    it('should insert with columns', async function() {
+      const result = await this.db.insert(table, {
         name: prefix + 'fengmk2-insert-with-columns',
         email: prefix + 'm@fengmk2-insert-with-columns.com',
-        ignoretitle: 'foo title'
+        ignoretitle: 'foo title',
       }, {
-        columns: ['name', 'email']
+        columns: [ 'name', 'email' ],
       });
       assert.equal(result.affectedRows, 1);
     });
 
-    it('should insert multi rows', async function () {
-      let result = await this.db.insert(table, [
+    it('should insert multi rows', async function() {
+      const result = await this.db.insert(table, [
         {
           name: prefix + 'fengmk2-insert2',
-          email: prefix + 'm@fengmk2-insert.com'
+          email: prefix + 'm@fengmk2-insert.com',
         },
         {
           name: prefix + 'fengmk2-insert3',
-          email: prefix + 'm@fengmk2-insert.com'
+          email: prefix + 'm@fengmk2-insert.com',
         },
       ]);
       assert.equal(result.affectedRows, 2);
-      let row = await this.db.get(table, {id: result.insertId});
+      const row = await this.db.get(table, { id: result.insertId });
       assert(row);
       assert.equal(row.id, result.insertId);
     });
 
-    it('should insert multi fail', async function () {
+    it('should insert multi fail', async function() {
       try {
         await this.db.insert(table, [
           {
             name: prefix + 'fengmk2-insert4',
-            email: prefix + 'm@fengmk2-insert.com'
+            email: prefix + 'm@fengmk2-insert.com',
           },
           {
             name: prefix + 'fengmk2-insert4',
-            email: prefix + 'm@fengmk2-insert.com'
+            email: prefix + 'm@fengmk2-insert.com',
           },
         ]);
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.code, 'ER_DUP_ENTRY');
       }
-      let row = await this.db.get(table, {name: prefix + 'fengmk2-insert4'});
+      const row = await this.db.get(table, { name: prefix + 'fengmk2-insert4' });
       assert(!row);
     });
 
-    it('should part success on Duplicate key without transaction', async function () {
-      let result = await this.db.insert(table, {
+    it('should part success on Duplicate key without transaction', async function() {
+      const result = await this.db.insert(table, {
         name: prefix + 'fengmk2-insert-no-tran',
-        email: prefix + 'm@fengmk2-insert.com'
+        email: prefix + 'm@fengmk2-insert.com',
       });
       assert.equal(result.affectedRows, 1);
       let rows = await this.db.select(table, {
-        where: {name: prefix + 'fengmk2-insert-no-tran'}
+        where: { name: prefix + 'fengmk2-insert-no-tran' },
       });
       assert.equal(rows.length, 1);
 
       try {
         await this.db.insert(table, {
           name: prefix + 'fengmk2-insert-no-tran',
-          email: prefix + 'm@fengmk2-insert.com'
+          email: prefix + 'm@fengmk2-insert.com',
         });
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.code, 'ER_DUP_ENTRY');
       }
       rows = await this.db.select(table, {
-        where: {name: prefix + 'fengmk2-insert-no-tran'}
+        where: { name: prefix + 'fengmk2-insert-no-tran' },
       });
       assert.equal(rows.length, 1);
     });
 
-    it('should all fail on Duplicate key with transaction', async function () {
-      let tran = await this.db.beginTransaction();
+    it('should all fail on Duplicate key with transaction', async function() {
+      const tran = await this.db.beginTransaction();
       try {
-        let result = await tran.insert(table, {
+        const result = await tran.insert(table, {
           name: prefix + 'fengmk2-insert-has-tran',
-          email: prefix + 'm@fengmk2-insert.com'
+          email: prefix + 'm@fengmk2-insert.com',
         });
         assert.equal(result.affectedRows, 1);
-        let rows = await tran.select(table, {
-          where: {name: prefix + 'fengmk2-insert-has-tran'}
+        const rows = await tran.select(table, {
+          where: { name: prefix + 'fengmk2-insert-has-tran' },
         });
         assert.equal(rows.length, 1);
 
         await tran.insert(table, {
           name: prefix + 'fengmk2-insert-has-tran',
-          email: prefix + 'm@fengmk2-insert.com'
+          email: prefix + 'm@fengmk2-insert.com',
         });
 
         await tran.commit();
@@ -647,15 +649,15 @@ describe('async.test.js', function () {
         assert.equal(err.code, 'ER_DUP_ENTRY');
       }
 
-      let rows = await this.db.select(table, {
-        where: {name: prefix + 'fengmk2-insert-has-tran'}
+      const rows = await this.db.select(table, {
+        where: { name: prefix + 'fengmk2-insert-has-tran' },
       });
       assert.equal(rows.length, 0);
     });
   });
 
-  describe('update(table, obj, options)', function () {
-    before(async function () {
+  describe('update(table, obj, options)', function() {
+    before(async function() {
       await this.db.insert(table, {
         name: prefix + 'fengmk2-update',
         email: prefix + 'm@fengmk2-update.com',
@@ -664,7 +666,7 @@ describe('async.test.js', function () {
       });
     });
 
-    it('should throw error when cannot auto detect update condition', async function () {
+    it('should throw error when cannot auto detect update condition', async function() {
       try {
         await this.db.update(table, {});
         throw new Error('should not run this');
@@ -674,7 +676,7 @@ describe('async.test.js', function () {
       }
     });
 
-    it('should get and update', async function () {
+    it('should get and update', async function() {
       await this.db.insert(table, {
         name: prefix + 'fengmk2-update2',
         email: prefix + 'm@fengmk2-update2.com',
@@ -682,18 +684,18 @@ describe('async.test.js', function () {
         gmt_modified: this.db.literals.now,
       });
 
-      let user = await this.db.get(table, {
+      const user = await this.db.get(table, {
         name: prefix + 'fengmk2-update2',
       });
       user.email = prefix + 'm@fengmk2-update2-again.com';
-      var result = await this.db.update(table, user);
+      const result = await this.db.update(table, user);
       assert.equal(result.affectedRows, 1);
 
-      let row = await this.db.get(table, {id: user.id});
+      const row = await this.db.get(table, { id: user.id });
       assert.equal(row.email, user.email);
     });
 
-    it('should update exists row', async function () {
+    it('should update exists row', async function() {
       let user = await this.db.get(table, {
         name: prefix + 'fengmk2-update',
       });
@@ -707,7 +709,7 @@ describe('async.test.js', function () {
       }, {
         where: {
           name: prefix + 'fengmk2-update',
-        }
+        },
       });
       assert.equal(result.affectedRows, 1);
 
@@ -720,49 +722,49 @@ describe('async.test.js', function () {
 
       user.email = prefix + 'm@fengmk2-update3.com';
       result = await this.db.update(table, user, {
-        columns: ['email']
+        columns: [ 'email' ],
       });
       assert.equal(result.affectedRows, 1);
-      let row = await this.db.get(table, {id: user.id});
+      const row = await this.db.get(table, { id: user.id });
       assert.equal(row.email, user.email);
     });
   });
 
-  describe('delete(table, where)', function () {
-    before(async function () {
+  describe('delete(table, where)', function() {
+    before(async function() {
       let result = await this.db.insert(table, {
         name: prefix + 'fengmk2-delete',
-        email: prefix + 'm@fengmk2-delete.com'
+        email: prefix + 'm@fengmk2-delete.com',
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
 
       result = await this.db.insert(table, {
         name: prefix + 'fengmk3-delete',
-        email: prefix + 'm@fengmk2-delete.com'
+        email: prefix + 'm@fengmk2-delete.com',
       });
       assert.equal(result.affectedRows, 1);
     });
 
-    it('should delete exists rows', async function () {
-      let result = await this.db.delete(table, {email: prefix + 'm@fengmk2-delete.com'});
+    it('should delete exists rows', async function() {
+      const result = await this.db.delete(table, { email: prefix + 'm@fengmk2-delete.com' });
       assert.equal(result.affectedRows, 2);
       assert.equal(result.insertId, 0);
 
-      let user = await this.db.get(table, {email: prefix + 'm@fengmk2-delete.com'});
+      const user = await this.db.get(table, { email: prefix + 'm@fengmk2-delete.com' });
       assert(!user);
     });
 
-    it('should delete not exists rows', async function () {
-      let result = await this.db.delete(table, {email: prefix + 'm@fengmk2-delete-not-exists.com'});
+    it('should delete not exists rows', async function() {
+      const result = await this.db.delete(table, { email: prefix + 'm@fengmk2-delete-not-exists.com' });
       assert.equal(result.affectedRows, 0);
       assert.equal(result.insertId, 0);
     });
 
-    it('should delete all rows when where = null', async function () {
+    it('should delete all rows when where = null', async function() {
       let result = await this.db.insert(table, {
         name: prefix + 'fengmk2-delete2',
-        email: prefix + 'm@fengmk2-delete2.com'
+        email: prefix + 'm@fengmk2-delete2.com',
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
@@ -772,17 +774,17 @@ describe('async.test.js', function () {
 
       result = await this.db.insert(table, {
         name: prefix + 'fengmk2-delete3',
-        email: prefix + 'm@fengmk2-delete3.com'
+        email: prefix + 'm@fengmk2-delete3.com',
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
       result = await this.db.delete(table, null);
       assert(result.affectedRows > 0);
 
-      let conn = await this.db.getConnection();
+      const conn = await this.db.getConnection();
       result = await conn.insert(table, {
         name: prefix + 'fengmk2-delete3',
-        email: prefix + 'm@fengmk2-delete3.com'
+        email: prefix + 'm@fengmk2-delete3.com',
       });
       assert.equal(result.affectedRows, 1);
       assert(result.insertId > 0);
@@ -792,10 +794,10 @@ describe('async.test.js', function () {
     });
   });
 
-  describe('getConnection()', function () {
-    it('should throw error when mysql connect fail', async function () {
-      let db = rds({
-        port: 33061
+  describe('getConnection()', function() {
+    it('should throw error when mysql connect fail', async function() {
+      const db = rds({
+        port: 33061,
       });
       try {
         await db.getConnection();
@@ -807,22 +809,22 @@ describe('async.test.js', function () {
     });
   });
 
-  describe('count()', function () {
-    before(async function () {
+  describe('count()', function() {
+    before(async function() {
       await this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [table, prefix + 'fengmk2-count', prefix + 'm@fengmk2-count.com']);
+        [ table, prefix + 'fengmk2-count', prefix + 'm@fengmk2-count.com' ]);
       await this.db.query('insert into ??(name, email, gmt_create, gmt_modified) \
         values(?, ?, now(), now())',
-        [table, prefix + 'fengmk3-count', prefix + 'm@fengmk2-count.com']);
+        [ table, prefix + 'fengmk3-count', prefix + 'm@fengmk2-count.com' ]);
     });
 
-    it('should get total table rows count', async function () {
+    it('should get total table rows count', async function() {
       let count = await this.db.count(table);
       assert(count >= 2);
 
       count = await this.db.count(table, {
-        email: prefix + 'm@fengmk2-count.com'
+        email: prefix + 'm@fengmk2-count.com',
       });
       assert.equal(count, 2);
 
@@ -834,25 +836,25 @@ describe('async.test.js', function () {
   describe('mock query after client end', function() {
     it('should query throw error after end', async function() {
       const db = rds(config);
-      await db.query('select * from ?? limit 10', [table]);
+      await db.query('select * from ?? limit 10', [ table ]);
       await db.end();
       const db2 = rds(config);
 
       try {
-        await db.query('select * from ?? limit 10', [table]);
+        await db.query('select * from ?? limit 10', [ table ]);
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.message, 'Pool is closed.');
       }
 
-      await db2.query('select * from ?? limit 10', [table]);
+      await db2.query('select * from ?? limit 10', [ table ]);
       await db2.end();
     });
 
     it('should support end with callback style', function(done) {
       const db = rds(config);
       co(async function() {
-        await db.query('select * from ?? limit 10', [table]);
+        await db.query('select * from ?? limit 10', [ table ]);
         db.end(done);
       }).catch(done);
     });
