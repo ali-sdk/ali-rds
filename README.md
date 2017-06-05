@@ -183,14 +183,15 @@ let rows = yield db.select('table-name');
 ```js
 let rows = yield db.select('table-name', {
   where: {
-    type: 'javascript'
+    type: 'javascript',
+    date: [{ op: '>=', value: '20170504'}]
   },
   columns: ['author', 'title'],
   orders: [['id', 'desc']]
 });
 
 => SELECT `author`, `title` FROM `table-name`
- WHERE `type` = 'javascript' ORDER BY `id` DESC
+ WHERE `type` = 'javascript' AND `date` >= '20170504' ORDER BY `id` DESC
 ```
 
 ### Delete
