@@ -721,6 +721,43 @@ describe('client.test.js', function() {
       const row = yield this.db.get(table, { id: user.id });
       assert.equal(row.email, user.email);
     });
+
+    it('should update columns in options.where', function* () {
+      const user = yield this.db.get(table, {
+        name: prefix + 'fengmk2-update',
+      });
+      const result = yield this.db.update(table, {
+        name: prefix + 'fengmk2-update-1',
+        email: prefix + 'm@fengmk2-update2.com',
+        gmt_modified: this.db.literals.now,
+      }, {
+        where: {
+          id: user.id,
+          name: prefix + 'fengmk2-update',
+          email: user.email,
+        },
+      });
+      assert.equal(result.affectedRows, 1);
+
+      const row = yield this.db.get(table, {
+        id: user.id,
+      });
+
+      assert.equal(user.id, row.id);
+      assert.notEqual(row.name, user.name);
+      assert.notEqual(row.email, user.email);
+
+      const _query = this.db._query;
+      this.db._query = function* (sql) { return sql; };
+
+      const sql = yield this.db.update(table, {
+        id: user.id,
+        name: prefix + 'fengmk2-update-2',
+        email: prefix + 'm@fengmk2-update22.com',
+      });
+      assert.equal(sql.split('WHERE').shift().indexOf('`id` = ') === -1, true);
+      this.db._query = _query;
+    });
   });
 
   describe('delete(table, where)', function() {
