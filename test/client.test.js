@@ -665,7 +665,7 @@ describe('client.test.js', function() {
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.message,
-          'Can\'t not auto detect update condition, please set options.where, or make sure obj.id exists');
+          'Can not auto detect update condition, please set options.where, or make sure obj.id exists');
       }
     });
 
