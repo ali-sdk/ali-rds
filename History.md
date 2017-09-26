@@ -1,4 +1,13 @@
 
+3.0.1 / 2017-09-26
+==================
+
+**fixes**
+  * [[`5ca4489`](http://github.com/ali-sdk/ali-rds/commit/5ca4489b903923302c81a8c9c8ac94c0afbce819)] - fix: don't redefined sqlstring.escape (#39) (Yiyu He <<dead_horse@qq.com>>)
+
+**others**
+  * [[`004713c`](http://github.com/ali-sdk/ali-rds/commit/004713cf9a4aa2da84a9f02348996b1a8ec82430)] - doc: fix typo 'Can\'t not' => 'Can not' (#34) (dreamswhite <<dreamswhite@aliyun.com>>)
+
 3.0.0 / 2017-04-02
 ==================
 
