@@ -40,6 +40,9 @@
   "engines": {
     "node": ">= 4.0.0"
   },
+  "publishConfig": {
+    "tag": "2.x"
+  },
   "author": "fengmk2 <m@fengmk2.com> (http://fengmk2.com)",
   "license": "MIT"
 }
