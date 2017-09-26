@@ -1,4 +1,13 @@
 
+2.7.1 / 2017-09-26
+==================
+
+**fixes**
+  * [[`412b959`](http://github.com/ali-sdk/ali-rds/commit/412b959e7e04ae39aa91b27334fe89ea911d846e)] - fix: don't redefined sqlstring.escape (#40) (Yiyu He <<dead_horse@qq.com>>)
+
+**others**
+  * [[`011ee43`](http://github.com/ali-sdk/ali-rds/commit/011ee43c2d39193a1d975f198f3c75a60efca3dc)] - chore: add tag 2.x (dead-horse <<dead_horse@qq.com>>)
+
 2.7.0 / 2017-03-31
 ==================
 
