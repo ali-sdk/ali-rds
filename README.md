@@ -278,17 +278,24 @@ function* bar(ctx, data2) {
 
 ### Raw Queries
 
-- Query with arguments
+- Query without arguments
 
 ```js
 let rows = yield db.query('SELECT * FROM your_table LIMIT 100');
 console.log(rows);
 ```
 
-- Query with arguments
+- Query with array arguments
 
 ```js
-let rows = yield db.query('SELECT * FROM your_table WHERE id=?', [123]);
+let rows = yield db.query('SELECT * FROM your_table WHERE id=?', [ 123 ]);
+console.log(rows);
+```
+
+- Query with object arguments
+
+```js
+let rows = yield db.query('SELECT * FROM your_table WHERE id=:id', { id: 123 });
 console.log(rows);
 ```
 
