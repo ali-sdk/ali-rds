@@ -440,21 +440,21 @@ describe('async.test.js', function() {
     it('should get exists object without columns', async function() {
       let user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
 
       user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
         orders: [[ 'id', 'desc' ]],
       });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
 
       user = await this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
         orders: [[ 'id', 'desc' ], 'gmt_modified', [ 'gmt_create', 'asc' ]],
       });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
     });
 
@@ -480,7 +480,7 @@ describe('async.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 2);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = await this.db.select(table, {
@@ -490,7 +490,7 @@ describe('async.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 1);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
       users = await this.db.select(table, {
@@ -501,7 +501,7 @@ describe('async.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 1);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = await this.db.select(table, {
@@ -518,7 +518,7 @@ describe('async.test.js', function() {
       const users = await this.db.select(table);
       assert(users);
       assert.equal(users.length > 2, true);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
     });
 
     it('should select with options.orders', async function() {

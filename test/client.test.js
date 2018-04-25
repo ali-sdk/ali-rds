@@ -456,26 +456,45 @@ describe('client.test.js', function() {
         email: prefix + 'm@fengmk2-get.com',
       });
       assert.equal(result.affectedRows, 1);
+
+      result = yield this.db.insert(table, {
+        name: prefix + 'fengmk-mobile-get',
+        email: prefix + 'm@fengmk2-mobile-get.com',
+        mobile: prefix + '13800000000',
+      });
+      assert.equal(result.affectedRows, 1);
+    });
+
+    it('should get support NULL value', function* () {
+      let user = yield this.db.get(table, { mobile: null });
+      assert(user);
+      assert(user.mobile === null);
+      user = yield this.db.get(table, { mobile: undefined });
+      assert(user);
+      assert(user.mobile === null);
+      user = yield this.db.get(table, { mobile: prefix + '13800000000' });
+      assert(user);
+      assert(user.mobile === prefix + '13800000000');
     });
 
     it('should get exists object without columns', function* () {
       let user = yield this.db.get(table, { email: prefix + 'm@fengmk2-get.com' });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk2-get');
 
       user = yield this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
         orders: [[ 'id', 'desc' ]],
       });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
 
       user = yield this.db.get(table, { email: prefix + 'm@fengmk2-get.com' }, {
         orders: [[ 'id', 'desc' ], 'gmt_modified', [ 'gmt_create', 'asc' ]],
       });
       assert(user);
-      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(user), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(user.name, prefix + 'fengmk3-get');
     });
 
@@ -501,7 +520,7 @@ describe('client.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 2);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = yield this.db.select(table, {
@@ -511,7 +530,7 @@ describe('client.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 1);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk3-get');
 
       users = yield this.db.select(table, {
@@ -522,7 +541,7 @@ describe('client.test.js', function() {
       });
       assert(users);
       assert.equal(users.length, 1);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
       assert.equal(users[0].name, prefix + 'fengmk2-get');
 
       users = yield this.db.select(table, {
@@ -539,7 +558,7 @@ describe('client.test.js', function() {
       const users = yield this.db.select(table);
       assert(users);
       assert.equal(users.length > 2, true);
-      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email' ]);
+      assert.deepEqual(Object.keys(users[0]), [ 'id', 'gmt_create', 'gmt_modified', 'name', 'email', 'mobile' ]);
     });
 
     it('should select with options.orders', function* () {
@@ -725,7 +744,8 @@ describe('client.test.js', function() {
       let result = yield this.db.update(table, {
         name: prefix + 'fengmk2-update',
         email: prefix + 'm@fengmk2-update2.com',
-        gmt_create: 'now()', // invalid date
+        // gmt_create: 'now()', // invalid date, will throw error now
+        gmt_create: this.db.literals.now,
         gmt_modified: this.db.literals.now,
       }, {
         where: {
@@ -738,8 +758,9 @@ describe('client.test.js', function() {
         name: prefix + 'fengmk2-update',
       });
       assert.equal(user.email, prefix + 'm@fengmk2-update2.com');
-      assert.equal(user.gmt_create, '0000-00-00 00:00:00');
+      // assert.equal(user.gmt_create, '0000-00-00 00:00:00');
       assert(user.gmt_modified instanceof Date);
+      assert(user.gmt_create instanceof Date);
 
       user.email = prefix + 'm@fengmk2-update3.com';
       result = yield this.db.update(table, user, {
