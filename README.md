@@ -158,6 +158,57 @@ console.log(result);
   changedRows: 1 }
 ```
 
+### Update multiple rows
+
+-  Update multiple rows with primary key: `id`
+
+```js
+let rows = [{
+  id: 123,
+  name: 'fengmk2',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+}, {
+   id: 124,
+  name: 'fengmk2_2',
+  otherField: 'other field value 2',
+  modifiedAt: db.literals.now, // `now()` on db server
+}]
+let result = yield db.update('table-name', rows);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 2  Changed: 2  Warnings: 0',
+  protocol41: true,
+  changedRows: 2 }
+```
+
+- Update a row with `options.where` and `options.columns`
+
+```js
+let row = {
+  name: 'fengmk2',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+};
+let result = yield db.update('table-name', row, {
+  where: { name: row.name },
+  columns: [ 'otherField', 'modifiedAt' ]
+});
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 1,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 1  Changed: 1  Warnings: 0',
+  protocol41: true,
+  changedRows: 1 }
+```
+
 ### Get
 
 - Get a row
