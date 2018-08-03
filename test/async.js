@@ -730,6 +730,130 @@ describe('async.test.js', function() {
     });
   });
 
+  describe('updateRows(table, rows)', function() {
+    before(async function() {
+      await this.db.insert(table, [{
+        name: prefix + 'fengmk2-updateRows1',
+        email: prefix + 'm@fengmk2-updateRows1.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      }, {
+        name: prefix + 'fengmk2-updateRows2',
+        email: prefix + 'm@fengmk2-updateRows2.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      }]);
+    });
+
+    it('should throw error when param rows  is not an array', async function() {
+      try {
+        await this.db.updateRows(table, {});
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'Rows should be array');
+      }
+    });
+
+    it('should throw error when rows without primary key `id`', async function() {
+      try {
+        await this.db.updateRows(table, [{
+          name: prefix + 'fengmk2-updateRows1-updated',
+        }]);
+        throw new Error('should not run this');
+      } catch (err) {
+        assert.equal(err.message, 'Make sure each row has a id');
+      }
+    });
+
+    it('should get and update', async function() {
+      const rows = [{
+        name: prefix + 'fengmk2-updateRows1-again',
+        email: prefix + 'm@fengmk2-updateRows1-again.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      }, {
+        name: prefix + 'fengmk2-updateRows2-again',
+        email: prefix + 'm@fengmk2-updateRows2-again.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      }];
+      await this.db.insert(table, rows);
+
+      const names = rows.map(item => item.name);
+      let users = await this.db.select(table, {
+        where: { name: names },
+      });
+
+      users = users.map((item, index) => {
+        item.email = prefix + 'm@fengmk2-updateRows-again-updated' + (index + 1) + '.com';
+        item.gmt_create = new Date('1970');
+        return item;
+      });
+      const result = await this.db.updateRows(table, users);
+      assert.equal(result.affectedRows, 2);
+
+      const rowsUpdated = await this.db.select(table, {
+        where: { name: names },
+      });
+      assert.deepEqual(users.map(o => o.email), rowsUpdated.map(o => o.email));
+    });
+
+    it('should update exists row', async function() {
+      const names = [
+        prefix + 'fengmk2-updateRows1',
+        prefix + 'fengmk2-updateRows2',
+      ];
+      const emails = [
+        prefix + 'm@fengmk2-updateRows1.com',
+        prefix + 'm@fengmk2-updateRows2.com',
+      ];
+      let users = await this.db.select(table, {
+        where: { name: names },
+      });
+      assert.deepEqual(users.map(o => o.email), emails);
+
+      users = users.map((item, index) => {
+        item.email = prefix + 'm@fengmk2-updateRows-updated' + (index + 1) + '.com';
+        item.gmt_create = new Date('1970');
+        return item;
+      });
+
+      let result = await this.db.updateRows(table, users);
+      assert.equal(result.affectedRows, 2);
+
+      users = await this.db.select(table, {
+        where: { name: names },
+      });
+      assert.deepEqual(users.map(o => o.email), [
+        prefix + 'm@fengmk2-updateRows-updated1.com',
+        prefix + 'm@fengmk2-updateRows-updated2.com',
+      ]);
+
+      const newGmtCreate = new Date('2000');
+      users = users.map((item, index) => {
+        const newItem = {
+          id: item.id,
+          email: prefix + 'm@fengmk2-updateRows-again-updated' + (index + 1) + '.com',
+        };
+        if (index >= 1) {
+          newItem.gmt_create = newGmtCreate;
+        }
+        return newItem;
+      });
+      result = await this.db.updateRows(table, users);
+      assert.equal(result.affectedRows, 2);
+      users = await this.db.select(table, {
+        where: { name: names },
+      });
+      assert.deepEqual(users[0].gmt_create, new Date('1970'));
+      assert.deepEqual(users[1].gmt_create, newGmtCreate);
+      assert.deepEqual(users.map(o => o.email), [
+        prefix + 'm@fengmk2-updateRows-again-updated1.com',
+        prefix + 'm@fengmk2-updateRows-again-updated2.com',
+      ]);
+    });
+  });
+
   describe('delete(table, where)', function() {
     before(async function() {
       let result = await this.db.insert(table, {
