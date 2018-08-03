@@ -186,6 +186,33 @@ console.log(result);
   changedRows: 2 }
 ```
 
+-  Update multiple rows with primary key: `id`
+
+
+```js
+let rows = [{
+  id: 123,
+  name: 'fengmk2',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+}, {
+  // don't update name when `id` is 124
+  id: 124,
+  otherField: 'other field value 2',
+  modifiedAt: db.literals.now, // `now()` on db server
+}]
+let result = yield db.update('table-name', rows);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 2  Changed: 2  Warnings: 0',
+  protocol41: true,
+  changedRows: 2 }
+```
+
 
 ### Get
 
