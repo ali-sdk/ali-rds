@@ -542,7 +542,7 @@ describe('async.test.js', function() {
     });
   });
 
-  describe.only('insert(table, row[s])', function() {
+  describe('insert(table, row[s])', function() {
     it('should set now() as a default value for `gmt_create` and `gmt_modified`', async function() {
       const result = await this.db.insert(table, [{
         name: prefix + 'fengmk2-insert00',
