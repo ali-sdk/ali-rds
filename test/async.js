@@ -542,7 +542,24 @@ describe('async.test.js', function() {
     });
   });
 
-  describe('insert(table, row[s])', function() {
+  describe.only('insert(table, row[s])', function() {
+    it('should set now() as a default value for `gmt_create` and `gmt_modified`', async function() {
+      const result = await this.db.insert(table, [{
+        name: prefix + 'fengmk2-insert00',
+        email: prefix + 'm@fengmk2-insert.com',
+      }, {
+        name: prefix + 'fengmk2-insert01',
+        email: prefix + 'm@fengmk2-insert.com',
+        gmt_create: this.db.literals.now,
+        gmt_modified: this.db.literals.now,
+      }]);
+      assert.equal(result.affectedRows, 2);
+
+      const result1 = await this.db.get(table, { name: prefix + 'fengmk2-insert00' }, { columns: [ 'gmt_create', 'gmt_modified' ] });
+      const result2 = await this.db.get(table, { name: prefix + 'fengmk2-insert01' }, { columns: [ 'gmt_create', 'gmt_modified' ] });
+      assert.deepEqual(result1.gmt_create, result2.gmt_create);
+      assert.deepEqual(result2.gmt_modified, result2.gmt_modified);
+    });
     it('should insert one row', async function() {
       const result = await this.db.insert(table, {
         name: prefix + 'fengmk2-insert1',
