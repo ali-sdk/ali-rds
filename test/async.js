@@ -718,10 +718,27 @@ describe('async.test.js', function() {
       });
       assert.equal(user.email, prefix + 'm@fengmk2-update.com');
 
-      let result = await this.db.update(table, {
+      let result;
+
+      try {
+        result = await this.db.update(table, {
+          name: prefix + 'fengmk2-update',
+          email: prefix + 'm@fengmk2-update2.com',
+          gmt_create: 'now()', // invalid date
+          gmt_modified: this.db.literals.now,
+        }, {
+          where: {
+            name: prefix + 'fengmk2-update',
+          },
+        });
+      } catch (error) {
+        assert.equal(error.message, "ER_TRUNCATED_WRONG_VALUE: Incorrect datetime value: 'now()' for column 'gmt_create' at row 1");
+      }
+
+      result = await this.db.update(table, {
         name: prefix + 'fengmk2-update',
         email: prefix + 'm@fengmk2-update2.com',
-        gmt_create: 'now()', // invalid date
+        gmt_create: new Date('2000'),
         gmt_modified: this.db.literals.now,
       }, {
         where: {
@@ -733,8 +750,8 @@ describe('async.test.js', function() {
       user = await this.db.get(table, {
         name: prefix + 'fengmk2-update',
       });
-      assert.equal(user.email, prefix + 'm@fengmk2-update2.com');
-      assert.equal(user.gmt_create, '0000-00-00 00:00:00');
+      assert.deepEqual(user.email, prefix + 'm@fengmk2-update2.com');
+      assert.deepEqual(new Date(user.gmt_create), new Date('2000'));
       assert(user.gmt_modified instanceof Date);
 
       user.email = prefix + 'm@fengmk2-update3.com';
@@ -747,7 +764,7 @@ describe('async.test.js', function() {
     });
   });
 
-  describe.only('updateRows(table, rows)', function() {
+  describe('updateRows(table, rows)', function() {
     before(async function() {
       await this.db.insert(table, [{
         name: prefix + 'fengmk2-updateRows1',
