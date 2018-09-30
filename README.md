@@ -158,6 +158,74 @@ console.log(result);
   changedRows: 1 }
 ```
 
+### Update multiple rows
+
+-  Update multiple rows with primary key: `id`
+
+```js
+let options = [{
+  id: 123,
+  name: 'fengmk2',
+  email: 'm@fengmk2.com',
+  otherField: 'other field value',
+  modifiedAt: db.literals.now, // `now()` on db server
+}, {
+   id: 124,
+  name: 'fengmk2_2',
+  email: 'm@fengmk2_2.com',
+  otherField: 'other field value 2',
+  modifiedAt: db.literals.now, // `now()` on db server
+}]
+let result = yield db.updateRows('table-name', options);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 2  Changed: 2  Warnings: 0',
+  protocol41: true,
+  changedRows: 2 }
+```
+
+-  Update multiple rows with `row` and `where` properties
+
+
+```js
+let options = [{
+  row: {
+    email: 'm@fengmk2.com',
+    otherField: 'other field value',
+    modifiedAt: db.literals.now, // `now()` on db server
+  },
+  where: {
+    id: 123,
+    name: 'fengmk2',
+  }
+}, {
+  row: {
+    email: 'm@fengmk2_2.com',
+    otherField: 'other field value2',
+    modifiedAt: db.literals.now, // `now()` on db server
+  }, 
+  where: {
+    id: 124,
+    name: 'fengmk2_2',
+  }
+}]
+let result = yield db.updateRows('table-name', options);
+console.log(result);
+{ fieldCount: 0,
+  affectedRows: 2,
+  insertId: 0,
+  serverStatus: 2,
+  warningCount: 0,
+  message: '(Rows matched: 2  Changed: 2  Warnings: 0',
+  protocol41: true,
+  changedRows: 2 }
+```
+
+
 ### Get
 
 - Get a row
@@ -317,6 +385,7 @@ TBD
 - *get(table, where, options)
 - *insert(table, row[s], options)
 - *update(table, row, options)
+- *updateRows(table, options)
 - *delete(table, where)
 - *count(table, where)
 
