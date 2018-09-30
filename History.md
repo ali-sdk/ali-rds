@@ -1,4 +1,16 @@
 
+3.1.0 / 2018-09-30
+==================
+
+**features**
+  * [[`859d818`](http://github.com/ali-sdk/ali-rds/commit/859d818d7e327d1ff590d363dfbf3135d8c90454)] - feat: update multiple rows (#55) (Hang Jiang <<jianghangscu@gmail.com>>)
+
+**fixes**
+  * [[`db6d596`](http://github.com/ali-sdk/ali-rds/commit/db6d59616f4b5083142bed554fb104c1b5a7c14e)] - fix: add default value now() of `gmt_modified` and `gmt_create` (#56) (Hang Jiang <<jianghangscu@gmail.com>>)
+
+**others**
+  * [[`db3524c`](http://github.com/ali-sdk/ali-rds/commit/db3524c8da7f8b32291695a2fc5497ea8fddd155)] - doc: add object arguments in readme (#52) (凯 方 <<fkvsssl@126.com>>)
+
 3.0.1 / 2017-09-26
 ==================
 
