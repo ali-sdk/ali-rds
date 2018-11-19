@@ -415,6 +415,34 @@ describe('client.test.js', function() {
     });
   });
 
+  describe('beginDoomedTransactionScope(scope)', function() {
+
+    it('should insert 0 rows in a doomed transaction with ctx', function* () {
+      const ctx = {};
+      const db = this.db;
+
+      function* insert() {
+        return yield db.beginDoomedTransactionScope(function* (conn) {
+          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+            values(?, ?, now(), now())',
+            [ table, prefix + 'beginDoomedTransactionScopeCtx1', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+            values(?, ?, now(), now())',
+            [ table, prefix + 'beginDoomedTransactionScopeCtx2', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+          return true;
+        }, ctx);
+      }
+
+      yield insert();
+
+      const rows = yield db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+      assert.equal(rows.length, 0);
+      assert.equal(ctx._transactionConnection, null);
+      assert.equal(ctx._transactionScopeCount, 0);
+    });
+  });
+
   describe('get(table, obj, options), select(table, options)', function() {
     before(function* () {
       let result = yield this.db.insert(table, {
