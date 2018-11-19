@@ -1,4 +1,10 @@
 
+3.2.0 / 2018-11-19
+==================
+
+**features**
+  * [[`b227bc1`](http://github.com/ali-sdk/ali-rds/commit/b227bc12e5c6252264d4761b72f915b73d53c688)] - feat: support doomed transaction scope on test cases (#58) (AngrySean <<xujihui1985@gmail.com>>)
+
 3.1.0 / 2018-09-30
 ==================
 
