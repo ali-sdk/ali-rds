@@ -1,6 +1,6 @@
 {
   "name": "ali-rds",
-  "version": "3.0.1",
+  "version": "3.2.0",
   "description": "Aliyun RDS client",
   "main": "lib/client.js",
   "files": [
@@ -34,7 +34,7 @@
   },
   "bugs": {
     "url": "https://github.com/ali-sdk/ali-rds/issues",
-    "email": "m@fengmk2.com"
+    "email": "fengmk2@gmail.com"
   },
   "keywords": [
     "ali-rds"
@@ -42,6 +42,6 @@
   "engines": {
     "node": ">= 4.0.0"
   },
-  "author": "fengmk2 <m@fengmk2.com> (http://fengmk2.com)",
+  "author": "fengmk2 <fengmk2@gmail.com> (https://fengmk2.com)",
   "license": "MIT"
 }
