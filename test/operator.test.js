@@ -15,7 +15,8 @@ describe('operator.test.js', function() {
       assert.equal(op._where({}), '');
       assert.equal(op._where({ id: 1 }), ' WHERE `id` = 1');
       assert.equal(op._where({ id: 1, name: 'foo' }), ' WHERE `id` = 1 AND `name` = \'foo\'');
-      assert.equal(op._where({ id: 1, name2: null }), ' WHERE `id` = 1 AND `name2` = NULL');
+      assert.equal(op._where({ id: 1, name2: null }), ' WHERE `id` = 1 AND `name2` IS NULL');
+      assert.equal(op._where({ id: 1, name3: undefined }), ' WHERE `id` = 1 AND `name3` IS NULL');
       assert.equal(op._where({ 'test.id': 1 }), ' WHERE `test`.`id` = 1');
       assert.equal(op._where({ id: [ 1, 2 ], name: 'foo' }), ' WHERE `id` IN (1, 2) AND `name` = \'foo\'');
       assert.equal(op._where({ id: [ 1 ], name: 'foo' }, [ 'id', 'name' ]), ' WHERE `id` IN (1) AND `name` = \'foo\'');

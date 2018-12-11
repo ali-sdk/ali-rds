@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `ali-sdk-test-user` (
  `gmt_modified` datetime NOT NULL COMMENT 'modified time' DEFAULT NOW(),
  `name` varchar(100) NOT NULL COMMENT 'user name',
  `email` varchar(400) NOT NULL,
+ `mobile` varchar(50) DEFAULT NULL,
  PRIMARY KEY (`id`),
  UNIQUE KEY `name` (`name`),
  KEY `gmt_modified` (`gmt_modified`)
