@@ -1,4 +1,10 @@
 
+3.3.0 / 2018-12-11
+==================
+
+**features**
+  * [[`0d4d4ab`](http://github.com/ali-sdk/ali-rds/commit/0d4d4ab99a7cd655180f22d4d95e3cfef8c8714b)] - feat: where condition support NULL value (#60) (fengmk2 <<fengmk2@gmail.com>>)
+
 3.2.0 / 2018-11-19
 ==================
 
