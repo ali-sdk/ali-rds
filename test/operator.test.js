@@ -26,7 +26,7 @@ describe('operator.test.js', function() {
       assert.equal(op._where({ id: 1, name: 'foo\'\"', user: 'fengmk2' }),
         ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\' AND `user` = \'fengmk2\'');
       assert.equal(op._where({ name: { operator: 'like', value: '%wvv8oo%' } }), ' WHERE `name` like \'%wvv8oo%\'');
-      assert.equal(op._where({ age: { operator: '>', value: 10 } }), ' WHERE `age` > 20');
+      assert.equal(op._where({ age: { operator: '>', value: 10 } }), ' WHERE `age` > 10');
     });
   });
 
