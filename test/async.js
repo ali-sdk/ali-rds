@@ -747,10 +747,20 @@ describe('async.test.js', function() {
       });
       assert.equal(result.affectedRows, 1);
 
+      result = await this.db.update(table, {
+        email: prefix + 'm@fengmk2-update3.com',
+      }, {
+        where: {
+          name: prefix + 'fengmk2-update',
+          email: prefix + 'm@fengmk2-update2.com',
+        },
+      });
+      assert.equal(result.affectedRows, 1);
+
       user = await this.db.get(table, {
         name: prefix + 'fengmk2-update',
       });
-      assert.deepEqual(user.email, prefix + 'm@fengmk2-update2.com');
+      assert.deepEqual(user.email, prefix + 'm@fengmk2-update3.com');
       assert.deepEqual(new Date(user.gmt_create), new Date('2000'));
       assert(user.gmt_modified instanceof Date);
 
