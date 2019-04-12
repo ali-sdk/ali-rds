@@ -722,6 +722,18 @@ describe('async.test.js', function() {
 
       try {
         result = await this.db.update(table, {
+          name: prefix + 'fengmk2-update2',
+        }, {
+          where: {
+            name: prefix + 'fengmk2-update',
+          },
+        });
+      } catch (error) {
+        assert.equal(error.message, "ER_DUP_ENTRY: Duplicate entry 'prefix-v8.11.4-fengmk2-update2' for key 'name'");
+      }
+
+      try {
+        result = await this.db.update(table, {
           name: prefix + 'fengmk2-update',
           email: prefix + 'm@fengmk2-update2.com',
           gmt_create: 'now()', // invalid date
