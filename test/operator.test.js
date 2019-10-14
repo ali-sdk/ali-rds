@@ -25,6 +25,9 @@ describe('operator.test.js', function() {
       assert.equal(op._where({ id: 1, name: 'foo\'\"' }), ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\'');
       assert.equal(op._where({ id: 1, name: 'foo\'\"', user: 'fengmk2' }),
         ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\' AND `user` = \'fengmk2\'');
+      assert.equal(op._where({ name: { like: '%fe%' }, sex: 1 }), ' WHERE `name` LIKE \'%fe%\' AND `sex` = 1');
+      assert.equal(op._where({ time: { lte: '2019-10-10', gt: '2019-10-6' }, name: 'foo' }), ' WHERE `time` <= \'2019-10-10\' AND `time` > \'2019-10-6\' AND `name` = \'foo\'');
+      assert.equal(op._where({ name: { like: '%fe%' }, age: { lt: 20, gte: 18 }, address: 'beijing' }), ' WHERE `name` LIKE \'%fe%\' AND `age` < 20 AND `age` >= 18 AND `address` = \'beijing\'');
     });
   });
 
