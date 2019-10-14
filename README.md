@@ -251,14 +251,20 @@ let rows = yield db.select('table-name');
 ```js
 let rows = yield db.select('table-name', {
   where: {
-    type: 'javascript'
+    type: 'javascript',
+    name: { like: '%node%' },
+    price: { lte: 50, gte:20 }
   },
   columns: ['author', 'title'],
   orders: [['id', 'desc']]
 });
 
 => SELECT `author`, `title` FROM `table-name`
- WHERE `type` = 'javascript' ORDER BY `id` DESC
+ WHERE `type` = 'javascript' AND `name` LIKE
+ '%node%' AND `price` >= 20 AND `price` <= 50
+ ORDER BY `id` DESC
+
+ support:lte(<=)、gte(>=)、lt(<)、gt(>)
 ```
 
 ### Delete
