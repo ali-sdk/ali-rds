@@ -27,8 +27,10 @@ describe('hook.test.js', function() {
   describe('onQuery', function() {
     it('should hook onQuery', function* () {
       const sqlTest = 'select @@SESSION.autocommit as autocommit';
-      function onQuery(sql) {
-        console.log('sql: ', sql);
+      function onQuery(sql, time, args) {
+        console.log('query sql: ', sql);
+        console.log('query time: ', time + 'ms');
+        console.log('query result: ', args);
         assert.equal(sql, sqlTest);
       }
       const configHook = Object.assign({
@@ -38,6 +40,7 @@ describe('hook.test.js', function() {
       }, config);
       const db = rds(configHook);
       const rows = yield db.query(sqlTest);
+      console.log(rows);
       assert(rows);
       yield db.end();
     });
