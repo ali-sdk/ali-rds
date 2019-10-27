@@ -40,7 +40,6 @@ describe('hook.test.js', function() {
       }, config);
       const db = rds(configHook);
       const rows = yield db.query(sqlTest);
-      console.log(rows);
       assert(rows);
       yield db.end();
     });
