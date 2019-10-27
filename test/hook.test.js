@@ -8,8 +8,8 @@ describe('hook.test.js', function() {
 
   describe('onConnection', function() {
     it('should hook onConnection', function* () {
-      async function onConnection(conn) {
-        await conn.query('SET SESSION autocommit=OFF');
+      function* onConnection(conn) {
+        yield conn.query('SET SESSION autocommit=OFF');
       }
       const configHook = Object.assign({
         hook: {
