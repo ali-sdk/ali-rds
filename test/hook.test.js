@@ -13,7 +13,9 @@ describe('hook.test.js', function() {
       }
       const configHook = Object.assign({
         hook: {
-          onConnection,
+          callback: {
+            onConnection,
+          },
         },
       }, config);
       const db = rds(configHook);
@@ -27,15 +29,17 @@ describe('hook.test.js', function() {
   describe('onQuery', function() {
     it('should hook onQuery', function* () {
       const sqlTest = 'select @@SESSION.autocommit as autocommit';
-      function onQuery(sql, time, args) {
-        console.log('query sql: ', sql);
-        console.log('query time: ', time + 'ms');
+      function onQuery(hook, ms, sequence, args) {
+        console.log('query sql: ', sequence.sql);
+        console.log('query time: ', ms + 'ms');
         console.log('query result: ', args);
-        assert.equal(sql, sqlTest);
+        assert.equal(sequence.sql, sqlTest);
       }
       const configHook = Object.assign({
         hook: {
-          onQuery,
+          callback: {
+            onQuery,
+          },
         },
       }, config);
       const db = rds(configHook);
