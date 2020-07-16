@@ -1,4 +1,10 @@
 
+3.4.0 / 2020-07-16
+==================
+
+**features**
+  * [[`2e99ab8`](http://github.com/ali-sdk/ali-rds/commit/2e99ab8ce872b8482fe2b0a29af51a7a99aaff84)] - feat: export sqlstring method (#79) (Haoliang Gao <<sakura9515@gmail.com>>)
+
 3.3.1 / 2019-04-24
 ==================
 
