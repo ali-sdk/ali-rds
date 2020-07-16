@@ -23,7 +23,7 @@
     "eslint": "^3.19.0",
     "eslint-config-egg": "^3.2.0",
     "istanbul": "*",
-    "mocha": "7",
+    "mocha": "8",
     "thunk-mocha": "*"
   },
   "homepage": "https://github.com/ali-sdk/ali-rds",
