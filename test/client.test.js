@@ -2,6 +2,7 @@
 
 const co = require('co');
 const assert = require('assert');
+const mysql = require('mysql');
 const rds = require('../');
 const config = require('./config');
 
@@ -901,4 +902,20 @@ describe('client.test.js', function() {
       }).catch(done);
     });
   });
+
+  describe('export', () => {
+    it('export escape', function() {
+      assert(rds.escape && rds.escape === mysql.escape);
+    });
+    it('export escapeId', function() {
+      assert(rds.escapeId && rds.escapeId === mysql.escapeId);
+    });
+    it('export format', function() {
+      assert(rds.format && rds.format === mysql.format);
+    });
+    it('export raw', function() {
+      assert(rds.raw && rds.raw === mysql.raw);
+    });
+  });
+
 });
