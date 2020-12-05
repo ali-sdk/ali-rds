@@ -1,5 +1,4 @@
-ali-rds
-=======
+# ali-rds
 
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
@@ -30,14 +29,14 @@ Support `MySQL`, `SQL Server` and `PostgreSQL`.
 ### Create RDS instance
 
 ```js
-const rds = require('ali-rds');
+const rds = require("ali-rds");
 
 const db = rds({
-  host: 'your-rds-address.mysql.rds.aliyuncs.com',
+  host: "your-rds-address.mysql.rds.aliyuncs.com",
   port: 3306,
-  user: 'your-username',
-  password: 'your-password',
-  database: 'your-database-name',
+  user: "your-username",
+  password: "your-password",
+  database: "your-database-name",
 
   // optional params
   // The charset for the connection.
@@ -160,7 +159,7 @@ console.log(result);
 
 ### Update multiple rows
 
--  Update multiple rows with primary key: `id`
+- Update multiple rows with primary key: `id`
 
 ```js
 let options = [{
@@ -188,8 +187,7 @@ console.log(result);
   changedRows: 2 }
 ```
 
--  Update multiple rows with `row` and `where` properties
-
+- Update multiple rows with `row` and `where` properties
 
 ```js
 let options = [{
@@ -207,7 +205,7 @@ let options = [{
     email: 'm@fengmk2_2.com',
     otherField: 'other field value2',
     modifiedAt: db.literals.now, // `now()` on db server
-  }, 
+  },
   where: {
     id: 124,
     name: 'fengmk2_2',
@@ -224,7 +222,6 @@ console.log(result);
   protocol41: true,
   changedRows: 2 }
 ```
-
 
 ### Get
 
@@ -259,6 +256,53 @@ let rows = yield db.select('table-name', {
 
 => SELECT `author`, `title` FROM `table-name`
  WHERE `type` = 'javascript' ORDER BY `id` DESC
+```
+
+- 复杂查询
+  > 如果你看到这里说明你和我遇到了一样的问题，egg/mysql 缺少一些实用方法，这里做了一些扩展，可能在你的使用过程中，还会存在 bug，请参考着继续完善吧。
+
+```js
+        let rows = yield db.select('table-name', {
+            where: {
+                sender: { op: 'like', value: `%111%` },
+                receiver: { op: 'like', value: `%222%` },
+                cn_orderno_list: { op: 'like', value: `%333%` },
+                OR: {
+                    sender11: { op: 'like', value: `%111%` },
+                    receiver22: { op: 'like', value: `%222%` },
+                },
+                a: 1,
+                b: [11, 22],
+                AND: {
+                    orderno: null,
+                    id: 1,
+                    role: ['admin', 'guest'],
+                    OR: {
+                        realname: { op: 'like', value: 'simba' },
+                        age: { op: '>', value: '20' },
+                        nickname: { op: 'like', value: 'ace' }
+                    },
+                    createtime: [
+                        { op: '>', value: '2020-10-13' },
+                        { op: '<', value: '2020-11-22' },
+                    ]
+                },
+            },
+            columns: ['author', 'title'],
+            orders: [['id', 'desc']]
+        });
+
+=> SELECT *  FROM `t_order`
+    WHERE `sender` like '%111%'
+    AND `receiver` like '%222%'
+    AND `cn_orderno_list` like '%333%'
+    AND (`sender11` like '%111%' OR `receiver22` like '%222%')
+    AND `a` = 1
+    AND `b` IN (11, 22)
+    AND (`orderno` IS NULL AND `id` = 1
+    AND `role` IN ('admin', 'guest')
+    AND (`realname` like 'simba' OR `age` > '20' OR `nickname` like 'ace')
+    AND (`createtime` > '2020-10-13' AND `createtime` < '2020-11-22'))
 ```
 
 ### Delete
@@ -337,7 +381,7 @@ function* foo(ctx, data1) {
 function* bar(ctx, data2) {
   return yield db.beginTransactionScope(function* (conn) {
     // execute foo with the same transaction scope
-    yield foo(ctx, { foo: 'bar' });
+    yield foo(ctx, { foo: "bar" });
     yield conn.insert(table2, data2);
     return { success: true };
   }, ctx);
@@ -379,20 +423,20 @@ TBD
 
 ### IO queries
 
-- *query(sql[, values)
-- *queryOne(sql[, values)
-- *select(table, options)
-- *get(table, where, options)
-- *insert(table, row[s], options)
-- *update(table, row, options)
-- *updateRows(table, options)
-- *delete(table, where)
-- *count(table, where)
+- \*query(sql[, values)
+- \*queryOne(sql[, values)
+- \*select(table, options)
+- \*get(table, where, options)
+- \*insert(table, row[s], options)
+- \*update(table, row, options)
+- \*updateRows(table, options)
+- \*delete(table, where)
+- \*count(table, where)
 
 #### Transactions
 
-- *beginTransaction()
-- *beginTransactionScope(scope)
+- \*beginTransaction()
+- \*beginTransactionScope(scope)
 
 ### Utils
 
@@ -416,7 +460,7 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 #### Custom Literal
 
 ```js
-let session = new db.literals.Literal('session()');
+let session = new db.literals.Literal("session()");
 ```
 
 ## TODO
