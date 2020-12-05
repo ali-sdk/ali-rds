@@ -300,9 +300,10 @@ let rows = yield db.select('table-name', {
     AND `a` = 1
     AND `b` IN (11, 22)
     AND (`orderno` IS NULL AND `id` = 1
-    AND `role` IN ('admin', 'guest')
-    AND (`realname` like 'simba' OR `age` > '20' OR `nickname` like 'ace')
-    AND (`createtime` > '2020-10-13' AND `createtime` < '2020-11-22'))
+          AND `role` IN ('admin', 'guest')
+          AND (`realname` like 'simba' OR `age` > '20' OR `nickname` like 'ace')
+          AND (`createtime` > '2020-10-13' AND `createtime` < '2020-11-22')
+        )
 ```
 
 ### Delete
