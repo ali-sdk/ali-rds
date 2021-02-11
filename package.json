@@ -20,6 +20,7 @@
   "devDependencies": {
     "autod": "*",
     "co": "4",
+    "egg-ci": "^1.18.0",
     "eslint": "^3.19.0",
     "eslint-config-egg": "^3.2.0",
     "istanbul": "*",
@@ -42,6 +43,14 @@
   ],
   "engines": {
     "node": ">= 4.0.0"
+  },
+  "ci": {
+    "type": "github",
+    "version": "8, 10, 12, 14",
+    "services": "mysql",
+    "os": {
+      "github": "linux, macos"
+    }
   },
   "author": "fengmk2 <fengmk2@gmail.com> (https://fengmk2.com)",
   "license": "MIT"

@@ -7,7 +7,7 @@ const rds = require('../');
 const config = require('./config');
 const sleep = require('mz-modules/sleep');
 
-describe('client.test.js', function() {
+describe('test/client.test.js', function() {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
   before(function* () {
@@ -422,21 +422,36 @@ describe('client.test.js', function() {
         this.db.beginTransactionScope(function* (conn) {
           yield conn.query(
             'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
-            [ prefix + 'should-safe-with-yield-array-1', prefix + 'm@should-safe-with-yield-array-1.com' ]
+            [ prefix + 'should-safe-with-yield-array-11', prefix + 'm@should-safe-with-yield-array-1.com' ]
+          );
+          yield conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-12', prefix + 'm@should-safe-with-yield-array-1.com' ]
+          );
+          yield conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-13', prefix + 'm@should-safe-with-yield-array-1.com' ]
           );
           yield sleep(100);
         }, ctx),
         this.db.beginTransactionScope(function* (conn) {
           yield conn.query(
             'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
-            [ prefix + 'should-safe-with-yield-array-2', prefix + 'm@should-safe-with-yield-array-1.com' ]
+            [ prefix + 'should-safe-with-yield-array-21', prefix + 'm@should-safe-with-yield-array-1.com' ]
           );
           yield sleep(200);
+        }, ctx),
+        this.db.beginTransactionScope(function* (conn) {
+          yield conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-31', prefix + 'm@should-safe-with-yield-array-1.com' ]
+          );
+          yield sleep(100);
         }, ctx),
       ];
       const rows = yield this.db.query(
         'SELECT * FROM `ali-sdk-test-user` where name like "%should-safe-with-yield-array%"');
-      assert(rows.length === 2);
+      assert(rows.length === 5);
     });
   });
 
