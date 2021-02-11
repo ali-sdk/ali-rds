@@ -69,4 +69,23 @@ describe('operator.test.js', function() {
       }
     });
   });
+
+  describe('_orders()', function () {
+    it('should get order sql', function* () {
+      let op = new Operator();
+      assert.equal(op._orders(), '');
+      assert.equal(op._orders([]), '');
+      assert.equal(op._orders([null]), '');
+      assert.equal(op._orders([function() {}]), '');
+      assert.equal(op._orders(['id']), ' ORDER BY `id`');
+      assert.equal(op._orders(['test.id']), ' ORDER BY `test`.`id`');
+      assert.equal(op._orders(['id', 'name']), ' ORDER BY `id`, `name`');
+      assert.equal(op._orders(['id', null]), ' ORDER BY `id`');
+      assert.equal(op._orders(['id', ['name', 'desc']]), ' ORDER BY `id`, `name` DESC');
+      assert.equal(op._orders(['id', ['name', 'ASC']]), ' ORDER BY `id`, `name` ASC');
+      assert.equal(op._orders(['id', ['name', 'other']]), ' ORDER BY `id`, `name`');
+      assert.equal(op._orders([['id', 'asc'], ['name', 'desc']]), ' ORDER BY `id` ASC, `name` DESC');
+      assert.equal(op._orders([['id', 'asc'], ['name'], 'type']), ' ORDER BY `id` ASC, `name`, `type`');
+    });
+  });
 });
