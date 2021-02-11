@@ -5,6 +5,7 @@ const assert = require('assert');
 const mysql = require('mysql');
 const rds = require('../');
 const config = require('./config');
+const sleep = require('mz-modules/sleep');
 
 describe('client.test.js', function() {
   const prefix = 'prefix-' + process.version + '-';
@@ -413,6 +414,29 @@ describe('client.test.js', function() {
         assert.equal(ctx._transactionConnection, null);
         assert.equal(ctx._transactionScopeCount, 3);
       });
+    });
+
+    it('should safe with yield Array', function* () {
+      const ctx = {};
+      yield [
+        this.db.beginTransactionScope(function* (conn) {
+          yield conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-1', prefix + 'm@should-safe-with-yield-array-1.com' ]
+          );
+          yield sleep(100);
+        }, ctx),
+        this.db.beginTransactionScope(function* (conn) {
+          yield conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-2', prefix + 'm@should-safe-with-yield-array-1.com' ]
+          );
+          yield sleep(200);
+        }, ctx),
+      ];
+      const rows = yield this.db.query(
+        'SELECT * FROM `ali-sdk-test-user` where name like "%should-safe-with-yield-array%"');
+      assert(rows.length === 2);
     });
   });
 
