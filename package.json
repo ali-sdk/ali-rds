@@ -21,7 +21,7 @@
     "autod": "*",
     "co": "4",
     "egg-ci": "^1.18.0",
-    "eslint": "^3.19.0",
+    "eslint": "^7.19.0",
     "eslint-config-egg": "^3.2.0",
     "istanbul": "*",
     "mocha": "8",
@@ -45,12 +45,9 @@
     "node": ">= 4.0.0"
   },
   "ci": {
-    "type": "github",
+    "type": "travis",
     "version": "8, 10, 12, 14",
-    "services": "mysql",
-    "os": {
-      "github": "linux, macos"
-    }
+    "services": "mysql"
   },
   "author": "fengmk2 <fengmk2@gmail.com> (https://fengmk2.com)",
   "license": "MIT"
