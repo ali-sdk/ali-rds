@@ -1,9 +1,5 @@
 'use strict';
 
-/**
- * Module dependencies.
- */
-
 const assert = require('assert');
 const mysql = require('mysql');
 const SqlString = require('../lib/sqlstring');
@@ -19,7 +15,7 @@ describe('sqlstring.test.js', function() {
     });
 
     it('should only patch once', function() {
-      require.cache[require.resolve('../lib/sqlstring')] = null;
+      delete require.cache[require.resolve('../lib/sqlstring')];
       const AnotherSqlString = require('../lib/sqlstring');
       assert.equal(AnotherSqlString.escape(literals.now), 'now()');
       assert.equal(AnotherSqlString.escape(new literals.Literal('sum')), 'sum');
