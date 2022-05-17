@@ -367,6 +367,38 @@ let rows = yield db.query('SELECT * FROM your_table WHERE id=:id', { id: 123 });
 console.log(rows);
 ```
 
+### Listener SQL execute
+
+#### emit rds-request event before SQL execute 
+
+```js
+/**
+ * sql {String} final executable SQL script
+ * values: {Array|undefined}
+ */
+db.on('rds-request', function({ sql, values }) {
+  // console.log(sql);
+});
+```
+
+#### emit rds-response event after SQL execute 
+
+```js
+/**
+ * sql {String} final executable SQL script
+ * values: {Array|undefined}
+ * rows: {Packet} sql execute result
+ * execDuration: sql execute cost time (ms)
+ * error: {Error} execute sql error info when error
+ */
+db.on('rds-response', function({ sql, values, rows, execDuration, error }) {
+  // console.log(sql);
+  if (error {
+    //...
+  }
+});
+```
+
 ## SQL Server Usage
 
 TBD
