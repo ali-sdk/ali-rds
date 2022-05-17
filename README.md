@@ -369,7 +369,7 @@ console.log(rows);
 
 ### Listener SQL execute
 
-#### emit rds-request event before SQL execute 
+- emit rds-request event before SQL execute 
 
 ```js
 /**
@@ -381,7 +381,7 @@ db.on('rds-request', function({ sql, values }) {
 });
 ```
 
-#### emit rds-response event after SQL execute 
+- emit rds-response event after SQL execute 
 
 ```js
 /**
