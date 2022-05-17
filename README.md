@@ -374,7 +374,7 @@ console.log(rows);
 ```js
 /**
  * sql {String} final executable SQL script
- * values: {Array|undefined}
+ * values: {Array|undefined} SQL param value
  */
 db.on('rds-request', function({ sql, values }) {
   // console.log(sql);
@@ -386,7 +386,7 @@ db.on('rds-request', function({ sql, values }) {
 ```js
 /**
  * sql {String} final executable SQL script
- * values: {Array|undefined}
+ * values: {Array|undefined} SQL param value
  * rows: {Packet} sql execute result
  * execDuration: sql execute cost time (ms)
  * error: {Error} execute sql error info when error
