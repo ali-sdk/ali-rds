@@ -13,8 +13,8 @@ describe('client.test.js', function() {
     yield this.db.query('delete from ?? where name like ?', [ table, prefix + '%' ]);
   });
 
-  after(function(done) {
-    this.db.end(done);
+  after(async function() {
+    await this.db.end();
   });
 
   describe('rds(options)', function() {
@@ -893,12 +893,12 @@ describe('client.test.js', function() {
       yield db2.end();
     });
 
-    it('should support end with callback style', function(done) {
-      const db = rds(config);
-      co(function* () {
-        yield db.query('select * from ?? limit 10', [ table ]);
-        db.end(done);
-      }).catch(done);
-    });
+    // it('should support end with callback style', function(done) {
+    //   const db = rds(config);
+    //   co(function* () {
+    //     yield db.query('select * from ?? limit 10', [ table ]);
+    //     db.end(done);
+    //   }).catch(done);
+    // });
   });
 });

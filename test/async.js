@@ -13,8 +13,8 @@ describe('async.test.js', function() {
     await this.db.query('delete from ?? where name like ?', [ table, prefix + '%' ]);
   });
 
-  after(function(done) {
-    this.db.end(done);
+  after(async function() {
+    await this.db.end();
   });
 
   describe('rds(options)', function() {
@@ -1090,12 +1090,12 @@ describe('async.test.js', function() {
       await db2.end();
     });
 
-    it('should support end with callback style', function(done) {
-      const db = rds(config);
-      co(async function() {
-        await db.query('select * from ?? limit 10', [ table ]);
-        db.end(done);
-      }).catch(done);
-    });
+    // it('should support end with callback style', function(done) {
+    //   const db = rds(config);
+    //   co(async function() {
+    //     await db.query('select * from ?? limit 10', [ table ]);
+    //     db.end(done);
+    //   }).catch(done);
+    // });
   });
 });
