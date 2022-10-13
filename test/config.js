@@ -3,8 +3,8 @@
 module.exports = {
   host: 'localhost',
   port: 3306,
-  user: 'root',
-  password: '',
+  user: 'root2',
+  password: 'yj123456',
   database: 'test',
   // host: env.ALI_SDK_RDS_HOST || 'localhost',
   // port: env.ALI_SDK_RDS_PORT || 3306,

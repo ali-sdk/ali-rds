@@ -7,9 +7,9 @@ const config = require('./config');
 describe('hook.test.js', function() {
 
   describe('onConnection', function() {
-    it('should hook onConnection', function* () {
-      function* onConnection(conn) {
-        yield conn.query('SET SESSION autocommit=OFF');
+    it('should hook onConnection', async function() {
+      async function onConnection(conn) {
+        await conn.query('SET SESSION autocommit=OFF');
       }
       const configHook = Object.assign({
         hook: {
@@ -19,10 +19,10 @@ describe('hook.test.js', function() {
         },
       }, config);
       const db = rds(configHook);
-      const rows = yield db.query('select @@SESSION.autocommit as autocommit');
+      const rows = await db.query('select @@SESSION.autocommit as autocommit');
       assert(rows);
       assert.equal(rows[0].autocommit, 0);
-      yield db.end();
+      await db.end();
     });
   });
 
