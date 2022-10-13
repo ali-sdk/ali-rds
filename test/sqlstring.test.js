@@ -5,7 +5,7 @@
  */
 
 const assert = require('assert');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const SqlString = require('../lib/sqlstring');
 const literals = require('../lib/literals');
 
@@ -19,7 +19,7 @@ describe('sqlstring.test.js', function() {
     });
 
     it('should only patch once', function() {
-      require.cache[require.resolve('../lib/sqlstring')] = null;
+      // require.cache[require.resolve('../lib/sqlstring')] = null;
       const AnotherSqlString = require('../lib/sqlstring');
       assert.equal(AnotherSqlString.escape(literals.now), 'now()');
       assert.equal(AnotherSqlString.escape(new literals.Literal('sum')), 'sum');

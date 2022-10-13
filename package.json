@@ -1,6 +1,6 @@
 {
   "name": "ali-rds",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "Aliyun RDS client",
   "main": "lib/client.js",
   "files": [
@@ -14,7 +14,7 @@
   "dependencies": {
     "co-wrap-all": "^1.0.0",
     "debug": "^2.2.0",
-    "mysql": "^2.13.0",
+    "mysql2": "^2.3.3",
     "pify": "^2.3.0"
   },
   "devDependencies": {
