@@ -5,7 +5,7 @@
  */
 
 const assert = require('assert');
-const mysql = require('mysql2');
+const mysql = require('@zhennann/mysql2');
 const SqlString = require('../lib/sqlstring');
 const literals = require('../lib/literals');
 
