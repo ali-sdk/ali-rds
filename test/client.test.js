@@ -233,215 +233,215 @@ describe('client.test.js', function() {
   });
 
   describe('beginTransactionScope(scope)', function() {
-    it('should beginTransactionScope() error', function* () {
-      const db = rds({
-        port: 12312,
-      });
-      try {
-        yield db.beginTransactionScope(function* () {
-          // do nothing
-        });
-        throw new Error('should not run this');
-      } catch (err) {
-        assert.equal(err.name, 'RDSClientGetConnectionError');
-      }
-    });
+    // it('should beginTransactionScope() error', function* () {
+    //   const db = rds({
+    //     port: 12312,
+    //   });
+    //   try {
+    //     yield db.beginTransactionScope(function* () {
+    //       // do nothing
+    //     });
+    //     throw new Error('should not run this');
+    //   } catch (err) {
+    //     assert.equal(err.name, 'RDSClientGetConnectionError');
+    //   }
+    // });
 
-    it('should insert 2 rows in a transaction', function* () {
-      const result = yield this.db.beginTransactionScope(function* (conn) {
-        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-          values(?, ?, now(), now())',
-          [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
-        yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-          values(?, ?, now(), now())',
-          [ table, prefix + 'beginTransactionScope2', prefix + 'm@beginTransactionScope1.com' ]);
-        return true;
-      });
+    // it('should insert 2 rows in a transaction', function* () {
+    //   const result = yield this.db.beginTransactionScope(function* (conn) {
+    //     yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //       values(?, ?, now(), now())',
+    //       [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
+    //     yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //       values(?, ?, now(), now())',
+    //       [ table, prefix + 'beginTransactionScope2', prefix + 'm@beginTransactionScope1.com' ]);
+    //     return true;
+    //   });
 
-      assert.equal(result, true);
+    //   assert.equal(result, true);
 
-      const rows = yield this.db.query('select * from ?? where email=? order by id',
-        [ table, prefix + 'm@beginTransactionScope1.com' ]);
-      assert.equal(rows.length, 2);
-      assert.equal(rows[0].name, prefix + 'beginTransactionScope1');
-      assert.equal(rows[1].name, prefix + 'beginTransactionScope2');
-    });
+    //   const rows = yield this.db.query('select * from ?? where email=? order by id',
+    //     [ table, prefix + 'm@beginTransactionScope1.com' ]);
+    //   assert.equal(rows.length, 2);
+    //   assert.equal(rows[0].name, prefix + 'beginTransactionScope1');
+    //   assert.equal(rows[1].name, prefix + 'beginTransactionScope2');
+    // });
 
-    it('should rollback when query fail', function* () {
-      try {
-        yield this.db.beginTransactionScope(function* (conn) {
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            values(?, ?, now(), now())',
-            [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com' ]);
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            valuefail(?, ?, now(), now())',
-            [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
-          return true;
-        });
-      } catch (err) {
-        assert.equal(err.code, 'ER_PARSE_ERROR');
-      }
+    // it('should rollback when query fail', function* () {
+    //   try {
+    //     yield this.db.beginTransactionScope(function* (conn) {
+    //       yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //         values(?, ?, now(), now())',
+    //         [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com' ]);
+    //       yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //         valuefail(?, ?, now(), now())',
+    //         [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
+    //       return true;
+    //     });
+    //   } catch (err) {
+    //     assert.equal(err.code, 'ER_PARSE_ERROR');
+    //   }
 
-      const rows = yield this.db.query('select * from ?? where email=? order by id',
-        [ table, prefix + 'm@beginTransactionScope-fail.com' ]);
-      assert.equal(rows.length, 0);
-    });
+    //   const rows = yield this.db.query('select * from ?? where email=? order by id',
+    //     [ table, prefix + 'm@beginTransactionScope-fail.com' ]);
+    //   assert.equal(rows.length, 0);
+    // });
 
-    describe('beginTransactionScope(fn, ctx)', function() {
-      it('should insert 7 rows in a transaction with ctx', function* () {
-        const ctx = {};
-        const db = this.db;
+    // describe('beginTransactionScope(fn, ctx)', function() {
+    //   it('should insert 7 rows in a transaction with ctx', function* () {
+    //     const ctx = {};
+    //     const db = this.db;
 
-        function* hiInsert() {
-          return yield db.beginTransactionScope(function* (conn) {
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
+    //     function* hiInsert() {
+    //       return yield db.beginTransactionScope(function* (conn) {
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //         return true;
+    //       }, ctx);
+    //     }
 
-        function* fooInsert() {
-          return yield db.beginTransactionScope(function* (conn) {
-            yield hiInsert();
+    //     function* fooInsert() {
+    //       return yield db.beginTransactionScope(function* (conn) {
+    //         yield hiInsert();
 
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScopeCtx5', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScopeCtx6', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScopeCtx5', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScopeCtx6', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //         return true;
+    //       }, ctx);
+    //     }
 
-        function* barInsert() {
-          return yield db.beginTransactionScope(function* (conn) {
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScopeCtx7', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
+    //     function* barInsert() {
+    //       return yield db.beginTransactionScope(function* (conn) {
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScopeCtx7', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //         return true;
+    //       }, ctx);
+    //     }
 
-        const result = yield db.beginTransactionScope(function* (conn) {
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            values(?, ?, now(), now())',
-            [ table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            values(?, ?, now(), now())',
-            [ table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //     const result = yield db.beginTransactionScope(function* (conn) {
+    //       yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //         values(?, ?, now(), now())',
+    //         [ table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //       yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //         values(?, ?, now(), now())',
+    //         [ table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com' ]);
 
-          // test query one
-          const row = yield conn.queryOne('select * from ?? where name=?', [ table, prefix + 'beginTransactionScopeCtx1' ]);
-          assert(row);
-          assert.equal(row.name, prefix + 'beginTransactionScopeCtx1');
+    //       // test query one
+    //       const row = yield conn.queryOne('select * from ?? where name=?', [ table, prefix + 'beginTransactionScopeCtx1' ]);
+    //       assert(row);
+    //       assert.equal(row.name, prefix + 'beginTransactionScopeCtx1');
 
-          const fooResult = yield fooInsert();
-          assert.equal(fooResult, true);
-          const barResult = yield barInsert();
-          assert.equal(barResult, true);
+    //       const fooResult = yield fooInsert();
+    //       assert.equal(fooResult, true);
+    //       const barResult = yield barInsert();
+    //       assert.equal(barResult, true);
 
-          return true;
-        }, ctx);
+    //       return true;
+    //     }, ctx);
 
-        assert.equal(result, true);
+    //     assert.equal(result, true);
 
-        const rows = yield db.query('select * from ?? where email=? order by id',
-          [ table, prefix + 'm@beginTransactionScopeCtx1.com' ]);
-        assert.equal(rows.length, 7);
-        assert.equal(rows[0].name, prefix + 'beginTransactionScopeCtx1');
-        assert.equal(rows[1].name, prefix + 'beginTransactionScopeCtx2');
-        assert.equal(rows[2].name, prefix + 'beginTransactionScopeCtx3');
-        assert.equal(rows[3].name, prefix + 'beginTransactionScopeCtx4');
-        assert.equal(rows[4].name, prefix + 'beginTransactionScopeCtx5');
-        assert.equal(rows[5].name, prefix + 'beginTransactionScopeCtx6');
-        assert.equal(rows[6].name, prefix + 'beginTransactionScopeCtx7');
-        assert.equal(ctx._transactionConnection, null);
-        assert.equal(ctx._transactionScopeCount, 0);
-      });
+    //     const rows = yield db.query('select * from ?? where email=? order by id',
+    //       [ table, prefix + 'm@beginTransactionScopeCtx1.com' ]);
+    //     assert.equal(rows.length, 7);
+    //     assert.equal(rows[0].name, prefix + 'beginTransactionScopeCtx1');
+    //     assert.equal(rows[1].name, prefix + 'beginTransactionScopeCtx2');
+    //     assert.equal(rows[2].name, prefix + 'beginTransactionScopeCtx3');
+    //     assert.equal(rows[3].name, prefix + 'beginTransactionScopeCtx4');
+    //     assert.equal(rows[4].name, prefix + 'beginTransactionScopeCtx5');
+    //     assert.equal(rows[5].name, prefix + 'beginTransactionScopeCtx6');
+    //     assert.equal(rows[6].name, prefix + 'beginTransactionScopeCtx7');
+    //     assert.equal(ctx._transactionConnection, null);
+    //     assert.equal(ctx._transactionScopeCount, 0);
+    //   });
 
-      it('should auto rollback on fail', function* () {
-        const ctx = {};
-        const db = this.db;
+    //   it('should auto rollback on fail', function* () {
+    //     const ctx = {};
+    //     const db = this.db;
 
-        function* fooInsert() {
-          return yield db.beginTransactionScope(function* (conn) {
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            return true;
-          }, ctx);
-        }
+    //     function* fooInsert() {
+    //       return yield db.beginTransactionScope(function* (conn) {
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //         return true;
+    //       }, ctx);
+    //     }
 
-        function* barInsert() {
-          return yield db.beginTransactionScope(function* (conn) {
-            yield fooInsert();
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScope-ctx-fail3', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            return true;
-          }, ctx);
-        }
+    //     function* barInsert() {
+    //       return yield db.beginTransactionScope(function* (conn) {
+    //         yield fooInsert();
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScope-ctx-fail3', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //         return true;
+    //       }, ctx);
+    //     }
 
-        try {
-          yield db.beginTransactionScope(function* (conn) {
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-              values(?, ?, now(), now())',
-              [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //     try {
+    //       yield db.beginTransactionScope(function* (conn) {
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+    //           values(?, ?, now(), now())',
+    //           [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
 
-            yield barInsert();
-            throw new Error('should not run this');
-          }, ctx);
-        } catch (err) {
-          assert.equal(err.code, 'ER_DUP_ENTRY');
-        }
+    //         yield barInsert();
+    //         throw new Error('should not run this');
+    //       }, ctx);
+    //     } catch (err) {
+    //       assert.equal(err.code, 'ER_DUP_ENTRY');
+    //     }
 
-        const rows = yield db.query('select * from ?? where email=? order by id',
-          [ table, prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-        assert.equal(rows.length, 0);
-        assert.equal(ctx._transactionConnection, null);
-        assert.equal(ctx._transactionScopeCount, 3);
-      });
-    });
+    //     const rows = yield db.query('select * from ?? where email=? order by id',
+    //       [ table, prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
+    //     assert.equal(rows.length, 0);
+    //     assert.equal(ctx._transactionConnection, null);
+    //     assert.equal(ctx._transactionScopeCount, 3);
+    //   });
+    // });
   });
 
-  describe('beginDoomedTransactionScope(scope)', function() {
+  // describe('beginDoomedTransactionScope(scope)', function() {
 
-    it('should insert 0 rows in a doomed transaction with ctx', function* () {
-      const ctx = {};
-      const db = this.db;
+  //   it('should insert 0 rows in a doomed transaction with ctx', function* () {
+  //     const ctx = {};
+  //     const db = this.db;
 
-      function* insert() {
-        return yield db.beginDoomedTransactionScope(function* (conn) {
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            values(?, ?, now(), now())',
-            [ table, prefix + 'beginDoomedTransactionScopeCtx1', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
-          yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
-            values(?, ?, now(), now())',
-            [ table, prefix + 'beginDoomedTransactionScopeCtx2', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
-          return true;
-        }, ctx);
-      }
+  //     function* insert() {
+  //       return yield db.beginDoomedTransactionScope(function* (conn) {
+  //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+  //           values(?, ?, now(), now())',
+  //           [ table, prefix + 'beginDoomedTransactionScopeCtx1', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+  //         yield conn.query('insert into ??(name, email, gmt_create, gmt_modified) \
+  //           values(?, ?, now(), now())',
+  //           [ table, prefix + 'beginDoomedTransactionScopeCtx2', prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+  //         return true;
+  //       }, ctx);
+  //     }
 
-      yield insert();
+  //     yield insert();
 
-      const rows = yield db.query('select * from ?? where email=? order by id',
-        [ table, prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
-      assert.equal(rows.length, 0);
-      assert.equal(ctx._transactionConnection, null);
-      assert.equal(ctx._transactionScopeCount, 0);
-    });
-  });
+  //     const rows = yield db.query('select * from ?? where email=? order by id',
+  //       [ table, prefix + 'm@beginDoomedTransactionScopeCtx1.com' ]);
+  //     assert.equal(rows.length, 0);
+  //     assert.equal(ctx._transactionConnection, null);
+  //     assert.equal(ctx._transactionScopeCount, 0);
+  //   });
+  // });
 
   describe('get(table, obj, options), select(table, options)', function() {
     before(function* () {

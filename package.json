@@ -7,7 +7,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "mocha -R spec -t 15000 -r thunk-mocha test/*.test.js",
+    "test": "mocha -R spec -t 15000000 -r thunk-mocha test/*.test.js",
     "ci": "npm run lint && istanbul cover node_modules/mocha/bin/_mocha -- -t 15000 -r thunk-mocha test/*.test.js",
     "lint": "eslint ."
   },
