@@ -1,6 +1,6 @@
 {
   "name": "@zhennann/ali-rds",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Aliyun RDS client",
   "main": "lib/client.js",
   "publishConfig": {
