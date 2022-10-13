@@ -1,6 +1,6 @@
 'use strict';
 
-const co = require('co');
+// const co = require('co');
 const assert = require('assert');
 const rds = require('../');
 const config = require('./config');
