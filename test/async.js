@@ -732,7 +732,8 @@ describe('async.test.js', function() {
           },
         });
       } catch (error) {
-        assert.equal(error.message, "ER_TRUNCATED_WRONG_VALUE: Incorrect datetime value: 'now()' for column 'gmt_create' at row 1");
+        assert.equal(error.message, "Incorrect datetime value: 'now()' for column 'gmt_create' at row 1");
+        // assert.equal(error.message, "ER_TRUNCATED_WRONG_VALUE: Incorrect datetime value: 'now()' for column 'gmt_create' at row 1");
       }
 
       result = await this.db.update(table, {
