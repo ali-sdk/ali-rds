@@ -1,6 +1,6 @@
 {
   "name": "@zhennann/ali-rds",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Aliyun RDS client",
   "main": "lib/client.js",
   "publishConfig": {
@@ -15,7 +15,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@zhennann/mysql2": "^2.3.3",
+    "@zhennann/mysql2": "^2.3.5",
     "debug": "^4.3.3"
   },
   "devDependencies": {
