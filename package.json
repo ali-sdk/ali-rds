@@ -7,42 +7,38 @@
     "lib"
   ],
   "scripts": {
-    "test": "mocha -R spec -t 15000 -r thunk-mocha test/*.test.js",
-    "ci": "npm run lint && istanbul cover node_modules/mocha/bin/_mocha -- -t 15000 -r thunk-mocha test/*.test.js",
+    "test": "egg-bin test",
+    "ci": "npm run lint && egg-bin cov",
     "lint": "eslint ."
   },
   "dependencies": {
-    "co-wrap-all": "^1.0.0",
-    "debug": "^2.2.0",
-    "mysql": "^2.13.0",
-    "pify": "^2.3.0"
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
-    "autod": "*",
-    "co": "4",
-    "eslint": "^3.19.0",
-    "eslint-config-egg": "^3.2.0",
-    "istanbul": "*",
-    "mocha": "8",
-    "mz-modules": "^2.1.0",
-    "thunk-mocha": "*"
+    "egg-bin": "^5.5.0",
+    "egg-ci": "^2.2.0",
+    "eslint": "^8.29.0",
+    "eslint-config-egg": "^12.1.0"
   },
   "homepage": "https://github.com/ali-sdk/ali-rds",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ali-sdk/ali-rds.git",
-    "web": "https://github.com/ali-sdk/ali-rds"
+    "url": "git://github.com/ali-sdk/ali-rds.git"
   },
   "bugs": {
-    "url": "https://github.com/ali-sdk/ali-rds/issues",
-    "email": "fengmk2@gmail.com"
+    "url": "https://github.com/ali-sdk/ali-rds/issues"
   },
   "keywords": [
-    "ali-rds"
+    "ali-rds",
+    "mysql"
   ],
   "engines": {
-    "node": ">= 4.0.0"
+    "node": ">= 14.0.0"
   },
-  "author": "fengmk2 <fengmk2@gmail.com> (https://fengmk2.com)",
+  "ci": {
+    "version": "14, 16, 18",
+    "os": "linux"
+  },
+  "author": "fengmk2 <fengmk2@gmail.com> (https://github.com/fengmk2)",
   "license": "MIT"
 }
