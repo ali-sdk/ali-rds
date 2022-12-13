@@ -7,8 +7,8 @@
     "lib"
   ],
   "scripts": {
-    "test": "egg-bin test",
-    "ci": "npm run lint && egg-bin cov",
+    "test": "egg-bin test --full-trace --espower=false",
+    "ci": "npm run lint && egg-bin cov --full-trace --espower=false",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -37,7 +37,12 @@
   },
   "ci": {
     "version": "14, 16, 18",
-    "os": "linux"
+    "os": "linux",
+    "service": {
+      "mysql": {
+        "version": "8"
+      }
+    }
   },
   "author": "fengmk2 <fengmk2@gmail.com> (https://github.com/fengmk2)",
   "license": "MIT"
