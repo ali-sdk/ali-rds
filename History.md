@@ -1,4 +1,13 @@
 
+3.4.1 / 2022-12-13
+==================
+
+**fixes**
+  * [[`d983478`](http://github.com/ali-sdk/ali-rds/commit/d983478d40203357c71187c94f44ef3afab0b604)] - fix: handle concurrent transaction (#85) (killa <<killa123@126.com>>)
+
+**others**
+  * [[`61e8e38`](http://github.com/ali-sdk/ali-rds/commit/61e8e38208acf4a9cc1780128063318f7f0e17ac)] - Create codeql.yml (fengmk2 <<fengmk2@gmail.com>>)
+
 3.4.0 / 2020-07-16
 ==================
 
