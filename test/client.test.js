@@ -1073,6 +1073,17 @@ describe('test/client.test.js', () => {
     });
   });
 
+  describe('get stats()', () => {
+    it('should get client stats', async () => {
+      const stats = db.stats;
+      console.log(stats);
+      assert.equal(typeof stats.acquiringConnections, 'number');
+      assert.equal(typeof stats.allConnections, 'number');
+      assert.equal(typeof stats.freeConnections, 'number');
+      assert.equal(typeof stats.connectionQueue, 'number');
+    });
+  });
+
   describe('count()', () => {
     before(async () => {
       await db.query(`insert into ??(name, email, gmt_create, gmt_modified)
