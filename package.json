@@ -33,10 +33,10 @@
     "mysql"
   ],
   "engines": {
-    "node": ">= 14.0.0"
+    "node": ">= 14.17.0"
   },
   "ci": {
-    "version": "14, 16, 18",
+    "version": "14.17.0, 14, 16, 18",
     "os": "linux",
     "service": {
       "mysql": {
