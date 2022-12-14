@@ -1,4 +1,10 @@
 
+4.0.0 / 2022-12-14
+==================
+
+**features**
+  * [[`6296b5b`](http://github.com/ali-sdk/ali-rds/commit/6296b5b1a0e08bf88097937a0b579a4c90b13a2d)] - 📦 NEW: [BREAKING] Refactor impl base on async/await (#94) (fengmk2 <<fengmk2@gmail.com>>)
+
 3.4.1 / 2022-12-13
 ==================
 
