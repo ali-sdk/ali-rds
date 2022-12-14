@@ -1,4 +1,10 @@
 
+4.0.1 / 2022-12-14
+==================
+
+**fixes**
+  * [[`add4669`](http://github.com/ali-sdk/ali-rds/commit/add466917422b15deddd434c25595b6f6082bb6b)] - 🐛 FIX: Export db pool stats (#95) (fengmk2 <<fengmk2@gmail.com>>)
+
 4.0.0 / 2022-12-14
 ==================
 
