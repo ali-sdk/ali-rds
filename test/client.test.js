@@ -4,6 +4,12 @@ const path = require('path');
 const RDSClient = require('..');
 const config = require('./config');
 
+function sleep(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 describe('test/client.test.js', () => {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
@@ -416,6 +422,27 @@ describe('test/client.test.js', () => {
         assert.equal(ctx._transactionConnection, null);
         assert.equal(ctx._transactionScopeCount, 3);
       });
+    });
+
+    it('should safe with await Array', async () => {
+      const ctx = {};
+      await Promise.all([
+        await db.beginTransactionScope(async conn => {
+          await conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-1', prefix + 'm@should-safe-with-yield-array-1.com' ]);
+          await sleep(100);
+        }, ctx),
+        await db.beginTransactionScope(async conn => {
+          await conn.query(
+            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
+            [ prefix + 'should-safe-with-yield-array-2', prefix + 'm@should-safe-with-yield-array-1.com' ]);
+          await sleep(200);
+        }, ctx),
+      ]);
+      const rows = await db.query(
+        'SELECT * FROM `ali-sdk-test-user` where name like "%should-safe-with-yield-array%"');
+      assert(rows.length === 2);
     });
   });
 
