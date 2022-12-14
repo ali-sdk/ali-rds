@@ -1,9 +1,3 @@
-'use strict';
-
-/**
- * Module dependencies.
- */
-
 const assert = require('assert');
 const Operator = require('../lib/operator');
 

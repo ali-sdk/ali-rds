@@ -1,9 +1,6 @@
 {
   "extends": "eslint-config-egg",
   "parserOptions": {
-    "ecmaVersion": 2017
-  },
-  "rules": {
-    "no-multi-str": 0,
-  },
+    "ecmaVersion": "latest"
+  }
 }
