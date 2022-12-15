@@ -256,6 +256,24 @@ describe('test/client.test.js', () => {
       assert.equal(rows[1].name, prefix + 'beginTransaction2');
     });
 
+    it('should lock & unlock table during transaction', async () => {
+      const conn = await db.getConnection();
+      try {
+        await conn.beginTransaction();
+        await conn.lockOne('ali-sdk-test-user', 'READ', 't');
+        // error thrown: when table locked with alias, you can only query with the alias.
+        await assert.rejects(async () => {
+          await conn.query('select * from `ali-sdk-test-user` limit 1;');
+        });
+        await conn.unlock();
+        // recovered after unlock.
+        await conn.query('select * from `ali-sdk-test-user` limit 1;');
+      } catch (err) {
+        conn.release();
+        throw err;
+      }
+    });
+
     it('should rollback when query fail', async () => {
       const conn = await db.getConnection();
       try {
