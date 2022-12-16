@@ -113,19 +113,24 @@ describe('test/client.test.js', () => {
     });
 
     it('should lock a table', async () => {
-      const sql = db._locks([
-        { tableName: 'posts', lockType: 'READ' },
-      ]);
-      assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ;');
+      // assert.equal(sql.replace(/\s+/g, ' '), 'LOCK TABLES `posts` READ;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
+          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
+        ]);
+      }, err => err.sql.includes('LOCK TABLES  `ali-sdk-test-user`  READ,  `ali-sdk-test-user`  READ;'));
     });
 
     it('should lock multiple tables', async () => {
-      const sql = db._locks([
-        { tableName: 'posts', lockType: 'READ' },
-        { tableName: 'posts2', lockType: 'WRITE' },
-        { tableName: 'posts3', lockType: 'WRITE', tableAlias: 't' },
-      ]);
-      assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
+      // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
+          { tableName: 'ali-sdk-test-user', lockType: 'WRITE' },
+          { tableName: 'ali-sdk-test-user', lockType: 'WRITE', tableAlias: 't' },
+        ]);
+      }, err => err.sql.includes('LOCK TABLES  `ali-sdk-test-user`  READ,  `ali-sdk-test-user`  WRITE,  `ali-sdk-test-user`  AS `t`  WRITE;'));
       await assert.rejects(async () => {
         await db.locks([
           { tableName: 'xxxx' },
@@ -135,14 +140,16 @@ describe('test/client.test.js', () => {
 
     it('should prevent sql injection', async () => {
       // identifier injection test.
-      const sql = db._locks([
-        { tableName: '(select * from others)', lockType: 'READ' },
-        { tableName: ';-- \nshow tables;', lockType: 'READ' },
-      ]);
-      assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `(select * from others)` READ, `;-- show tables;` READ;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: '(select * from others)', lockType: 'READ' },
+          { tableName: ';-- \nshow tables;', lockType: 'READ' },
+        ]);
+      });
+      // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `(select * from others)` READ, `;-- show tables;` READ;');
       // illeagle lockType test.
       await assert.rejects(async () => {
-        db._locks([
+        await db.locks([
           { tableName: 'some table', lockType: '(show tables;)--' },
         ]);
       });
