@@ -120,12 +120,32 @@ describe('test/client.test.js', () => {
     });
 
     it('should lock multiple tables', async () => {
-      const sql3 = db._locks([
+      const sql = db._locks([
         { tableName: 'posts', lockType: 'READ' },
         { tableName: 'posts2', lockType: 'WRITE' },
         { tableName: 'posts3', lockType: 'WRITE', tableAlias: 't' },
       ]);
-      assert.equal(sql3.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS t WRITE;');
+      assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: 'xxxx' },
+        ]);
+      }, new Error('No lock_type provided while trying to lock table `xxxx`'));
+    });
+
+    it('should prevent sql injection', async () => {
+      // identifier injection test.
+      const sql = db._locks([
+        { tableName: '(select * from others)', lockType: 'READ' },
+        { tableName: ';-- \nshow tables;', lockType: 'READ' },
+      ]);
+      assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `(select * from others)` READ, `;-- show tables;` READ;');
+      // illeagle lockType test.
+      await assert.rejects(async () => {
+        db._locks([
+          { tableName: 'some table', lockType: '(show tables;)--' },
+        ]);
+      });
     });
 
     it('should unlock tables', async () => {
