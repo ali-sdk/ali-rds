@@ -142,11 +142,10 @@ describe('test/client.test.js', () => {
       // identifier injection test.
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: '(select * from others)', lockType: 'READ' },
+          { tableName: '(select * from `ali-sdk-test-user`)', lockType: 'READ' },
           { tableName: ';-- \nshow tables;', lockType: 'READ' },
         ]);
-      });
-      // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `(select * from others)` READ, `;-- show tables;` READ;');
+      }, err => err.message.includes("ER_NO_SUCH_TABLE: Table 'test.(select * from `ali-sdk-test-user`)' doesn't exist"));
       // illeagle lockType test.
       await assert.rejects(async () => {
         await db.locks([
