@@ -30,6 +30,10 @@ describe('test/client.test.js', () => {
   });
 
   describe('new RDSClient(options)', () => {
+    it('should access pool', async () => {
+      assert(db.pool.config.connectionConfig.database);
+    });
+
     it('should connect rds success', async () => {
       const rows = await db.query('show tables');
       // console.log(rows);
