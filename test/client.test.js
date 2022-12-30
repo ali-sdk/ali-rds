@@ -116,44 +116,27 @@ describe('test/client.test.js', () => {
       // assert.equal(sql.replace(/\s+/g, ' '), 'LOCK TABLES `posts` READ;');
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
-          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
+          { tableName: table, lockType: 'READ' },
+          { tableName: table, lockType: 'READ' },
         ]);
-      }, err => err.sql.includes('LOCK TABLES  `ali-sdk-test-user`  READ,  `ali-sdk-test-user`  READ;'));
+      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;'));
     });
 
     it('should lock multiple tables', async () => {
       // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: 'ali-sdk-test-user', lockType: 'READ' },
-          { tableName: 'ali-sdk-test-user', lockType: 'WRITE' },
-          { tableName: 'ali-sdk-test-user', lockType: 'WRITE', tableAlias: 't' },
+          { tableName: table, lockType: 'READ' },
+          { tableName: table, lockType: 'WRITE' },
+          { tableName: table, lockType: 'WRITE', tableAlias: 't' },
         ]);
-      }, err => err.sql.includes('LOCK TABLES  `ali-sdk-test-user`  READ,  `ali-sdk-test-user`  WRITE,  `ali-sdk-test-user`  AS `t`  WRITE;'));
+      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  WRITE,  `' + table + '`  AS `t`  WRITE;'));
       await assert.rejects(async () => {
         await db.locks([
           { tableName: 'xxxx' },
         ]);
       }, new Error('No lock_type provided while trying to lock table `xxxx`'));
     });
-
-    it('should prevent sql injection', async () => {
-      // identifier injection test.
-      await assert.rejects(async () => {
-        await db.locks([
-          { tableName: '(select * from `ali-sdk-test-user`)', lockType: 'READ' },
-          { tableName: ';-- \nshow tables;', lockType: 'READ' },
-        ]);
-      }, err => err.message.includes("ER_NO_SUCH_TABLE: Table 'test.(select * from `ali-sdk-test-user`)' doesn't exist"));
-      // illeagle lockType test.
-      await assert.rejects(async () => {
-        await db.locks([
-          { tableName: 'some table', lockType: '(show tables;)--' },
-        ]);
-      });
-    });
-
     it('should unlock tables', async () => {
       await db.lockOne('ali-sdk-test-user', 'READ', 't');
       // error thrown: when table locked with alias, you can only query with the alias.
