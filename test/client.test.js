@@ -101,6 +101,58 @@ describe('test/client.test.js', () => {
     });
   });
 
+  describe('locks([...]), lockOne(name, lockType, alias), unlock()', () => {
+    it('validate arguments', async () => {
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: 'xxxx' },
+        ]);
+      }, new Error('No lock_type provided while trying to lock table `xxxx`'));
+
+      await assert.rejects(async () => {
+        await db.locks([
+          { lockType: 'READ' },
+        ]);
+      }, new Error('No table_name provided while trying to lock table'));
+    });
+
+    it('should lock a table', async () => {
+      // assert.equal(sql.replace(/\s+/g, ' '), 'LOCK TABLES `posts` READ;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: table, lockType: 'READ' },
+          { tableName: table, lockType: 'READ' },
+        ]);
+      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;'));
+    });
+
+    it('should lock multiple tables', async () => {
+      // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: table, lockType: 'READ' },
+          { tableName: table, lockType: 'WRITE' },
+          { tableName: table, lockType: 'WRITE', tableAlias: 't' },
+        ]);
+      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  WRITE,  `' + table + '`  AS `t`  WRITE;'));
+      await assert.rejects(async () => {
+        await db.locks([
+          { tableName: 'xxxx' },
+        ]);
+      }, new Error('No lock_type provided while trying to lock table `xxxx`'));
+    });
+    it('should unlock tables', async () => {
+      await db.lockOne('ali-sdk-test-user', 'READ', 't');
+      // error thrown: when table locked with alias, you can only query with the alias.
+      await assert.rejects(async () => {
+        await db.query('select * from `ali-sdk-test-user` limit 1;');
+      });
+      await db.unlock();
+      // recovered after unlock.
+      await db.query('select * from `ali-sdk-test-user` limit 1;');
+    });
+  });
+
   describe('transactions', () => {
     it('should beginTransaction error', async () => {
       const failDB = new RDSClient({
@@ -215,6 +267,24 @@ describe('test/client.test.js', () => {
       assert.equal(rows.length, 2);
       assert.equal(rows[0].name, prefix + 'beginTransaction1');
       assert.equal(rows[1].name, prefix + 'beginTransaction2');
+    });
+
+    it('should lock & unlock table during transaction', async () => {
+      const conn = await db.getConnection();
+      try {
+        await conn.beginTransaction();
+        await conn.lockOne('ali-sdk-test-user', 'READ', 't');
+        // error thrown: when table locked with alias, you can only query with the alias.
+        await assert.rejects(async () => {
+          await conn.query('select * from `ali-sdk-test-user` limit 1;');
+        });
+        await conn.unlock();
+        // recovered after unlock.
+        await conn.query('select * from `ali-sdk-test-user` limit 1;');
+      } catch (err) {
+        conn.release();
+        throw err;
+      }
     });
 
     it('should rollback when query fail', async () => {
