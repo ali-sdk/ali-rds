@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0](https://github.com/ali-sdk/ali-rds/compare/v4.0.3...v4.1.0) (2023-01-01)
+
+
+### Features
+
+* add unlock/lock tables ([#97](https://github.com/ali-sdk/ali-rds/issues/97)) ([4dc3452](https://github.com/ali-sdk/ali-rds/commit/4dc3452a375e0c242084e23c6e5f1cb76f1b647d))
+* add unlock/lock tables ([#97](https://github.com/ali-sdk/ali-rds/issues/97)) ([0a61be6](https://github.com/ali-sdk/ali-rds/commit/0a61be6048db4df298bfff33c6d23bdcc0119b9a))
+
 ## [4.0.3](https://github.com/ali-sdk/ali-rds/compare/v4.0.2...v4.0.3) (2022-12-22)
 
 
