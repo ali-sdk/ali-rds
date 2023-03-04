@@ -1,9 +1,11 @@
-const Operator = require('./operator');
+import type { RDSConnection } from './connection';
+import { Operator } from './operator';
 
-class RDSTransaction extends Operator {
+export class RDSTransaction extends Operator {
   isCommit = false;
   isRollback = false;
-  constructor(conn) {
+  conn: RDSConnection | null;
+  constructor(conn: RDSConnection) {
     super();
     this.conn = conn;
   }
@@ -11,10 +13,10 @@ class RDSTransaction extends Operator {
   async commit() {
     this.#check();
     try {
-      return await this.conn.commit();
+      return await this.conn!.commit();
     } finally {
       this.isCommit = true;
-      this.conn.release();
+      this.conn!.release();
       this.conn = null;
     }
   }
@@ -22,17 +24,17 @@ class RDSTransaction extends Operator {
   async rollback() {
     this.#check();
     try {
-      return await this.conn.rollback();
+      return await this.conn!.rollback();
     } finally {
       this.isRollback = true;
-      this.conn.release();
+      this.conn!.release();
       this.conn = null;
     }
   }
 
-  async _query(sql) {
+  protected async _query(sql: string) {
     this.#check();
-    return await this.conn._query(sql);
+    return await this.conn!._query(sql);
   }
 
   #check() {
@@ -41,4 +43,3 @@ class RDSTransaction extends Operator {
     }
   }
 }
-module.exports = RDSTransaction;

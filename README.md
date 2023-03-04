@@ -1,6 +1,7 @@
 # ali-rds
 
 [![NPM version][npm-image]][npm-url]
+[![Node.js CI](https://github.com/ali-sdk/ali-rds/actions/workflows/nodejs.yml/badge.svg)](https://github.com/ali-sdk/ali-rds/actions/workflows/nodejs.yml)
 [![Test coverage][codecov-image]][codecov-url]
 [![npm download][download-image]][download-url]
 
@@ -11,17 +12,17 @@
 [download-image]: https://img.shields.io/npm/dm/ali-rds.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ali-rds
 
-Aliyun RDS client. Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
-
+Aliyun RDS client.
 RDS, Relational Database Service. Equal to well know Amazon [RDS](http://aws.amazon.com/rds/).
-Support `MySQL`, `SQL Server` and `PostgreSQL`.
 
-## MySQL Usage
+Support `MySQL` protocol only.
+
+## Usage
 
 ### Create RDS instance
 
-```js
-const RDSClient = require('ali-rds');
+```ts
+import { RDSClient } from 'ali-rds';
 
 const db = new RDSClient({
   host: 'your-rds-address.mysql.rds.aliyuncs.com',
@@ -355,12 +356,6 @@ const rows = await db.query('SELECT * FROM your_table WHERE id=:id', { id: 123 }
 console.log(rows);
 ```
 
-## SQL Server Usage
-
-TBD
-
----
-
 ## APIs
 
 - `*` Meaning this function is yieldable.
@@ -377,7 +372,7 @@ TBD
 - async delete(table, where)
 - async count(table, where)
 
-### Transactions
+### Transactions Helpers
 
 - async beginTransaction()
 - async beginTransactionScope(scope)
@@ -407,14 +402,18 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 const session = new db.literals.Literal('session()');
 ```
 
-## TODO
-
-- [x] MySQL
-  - [x] Pool
-  - [ ] Cluster
-- [ ] SQL Server
-- [ ] PostgreSQL
-
 ## License
 
 [MIT](LICENSE)
+
+<!-- GITCONTRIBUTOR_START -->
+
+## Contributors
+
+|[<img src="https://avatars.githubusercontent.com/u/156269?v=4" width="100px;"/><br/><sub><b>fengmk2</b></sub>](https://github.com/fengmk2)<br/>|[<img src="https://avatars.githubusercontent.com/u/985607?v=4" width="100px;"/><br/><sub><b>dead-horse</b></sub>](https://github.com/dead-horse)<br/>|[<img src="https://avatars.githubusercontent.com/u/32174276?v=4" width="100px;"/><br/><sub><b>semantic-release-bot</b></sub>](https://github.com/semantic-release-bot)<br/>|[<img src="https://avatars.githubusercontent.com/u/6587734?v=4" width="100px;"/><br/><sub><b>AntiMoron</b></sub>](https://github.com/AntiMoron)<br/>|[<img src="https://avatars.githubusercontent.com/u/10287125?v=4" width="100px;"/><br/><sub><b>nodejh</b></sub>](https://github.com/nodejh)<br/>|[<img src="https://avatars.githubusercontent.com/u/4192962?v=4" width="100px;"/><br/><sub><b>fangk</b></sub>](https://github.com/fangk)<br/>|
+| :---: | :---: | :---: | :---: | :---: | :---: |
+[<img src="https://avatars.githubusercontent.com/u/1619030?v=4" width="100px;"/><br/><sub><b>xujihui1985</b></sub>](https://github.com/xujihui1985)<br/>|[<img src="https://avatars.githubusercontent.com/u/1468366?v=4" width="100px;"/><br/><sub><b>csbun</b></sub>](https://github.com/csbun)<br/>|[<img src="https://avatars.githubusercontent.com/u/360661?v=4" width="100px;"/><br/><sub><b>popomore</b></sub>](https://github.com/popomore)<br/>|[<img src="https://avatars.githubusercontent.com/u/12378108?v=4" width="100px;"/><br/><sub><b>hoythan</b></sub>](https://github.com/hoythan)<br/>|[<img src="https://avatars.githubusercontent.com/u/35927028?v=4" width="100px;"/><br/><sub><b>deadhorse123</b></sub>](https://github.com/deadhorse123)<br/>|[<img src="https://avatars.githubusercontent.com/u/6897780?v=4" width="100px;"/><br/><sub><b>killagu</b></sub>](https://github.com/killagu)<br/>
+
+This project follows the git-contributor [spec](https://github.com/xudafeng/git-contributor), auto updated at `Sat Mar 04 2023 18:57:33 GMT+0800`.
+
+<!-- GITCONTRIBUTOR_END -->

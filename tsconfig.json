@@ -1,0 +1,12 @@
+{
+  "extends": "@eggjs/tsconfig",
+  "compilerOptions": {
+    "module": "Node16",
+    "outDir": "lib",
+    "useUnknownInCatchVariables": false,
+    "target": "ES2022"
+  },
+  "include": [
+    "src"
+  ],
+}

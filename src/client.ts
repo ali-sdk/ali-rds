@@ -1,25 +1,44 @@
-const { promisify } = require('util');
-const mysql = require('mysql');
-const Operator = require('./operator');
-const RDSConnection = require('./connection');
-const RDSTransaction = require('./transaction');
-const literals = require('./literals');
+import { promisify } from 'node:util';
+import mysql from 'mysql';
+import type { PoolConfig, Pool } from 'mysql';
+import type { PoolConnectionPromisify } from './types';
+import { Operator } from './operator';
+import { RDSConnection } from './connection';
+import { RDSTransaction } from './transaction';
+import literals from './literals';
 
-class RDSClient extends Operator {
-  #pool;
-  constructor(options) {
+interface PoolPromisify extends Omit<Pool, 'query'> {
+  query(sql: string): Promise<any>;
+  getConnection(): Promise<PoolConnectionPromisify>;
+  end(): Promise<void>;
+  _acquiringConnections: any[];
+  _allConnections: any[];
+  _freeConnections: any[];
+  _connectionQueue: any[];
+}
+
+export class RDSClient extends Operator {
+  static get literals() { return literals; }
+  static get escape() { return mysql.escape; }
+  static get escapeId() { return mysql.escapeId; }
+  static get format() { return mysql.format; }
+  static get raw() { return mysql.raw; }
+
+  #pool: PoolPromisify;
+  constructor(options: PoolConfig) {
     super();
-    this.#pool = mysql.createPool(options);
+    this.#pool = mysql.createPool(options) as unknown as PoolPromisify;
     [
       'query',
       'getConnection',
+      'end',
     ].forEach(method => {
       this.#pool[method] = promisify(this.#pool[method]);
     });
   }
 
   // impl Operator._query
-  async _query(sql) {
+  protected async _query(sql: string) {
     return await this.#pool.query(sql);
   }
 
@@ -51,9 +70,9 @@ class RDSClient extends Operator {
   /**
    * Begin a transaction
    *
-   * @return {Transaction} transaction instance
+   * @return {RDSTransaction} transaction instance
    */
-  async beginTransaction() {
+  async beginTransaction(): Promise<RDSTransaction> {
     const conn = await this.getConnection();
     try {
       await conn.beginTransaction();
@@ -72,7 +91,7 @@ class RDSClient extends Operator {
    *   To make sure only one active transaction on this ctx.
    * @return {Object} - scope return result
    */
-  async beginTransactionScope(scope, ctx) {
+  async beginTransactionScope(scope: (transaction: RDSTransaction) => Promise<any>, ctx?: any): Promise<any> {
     ctx = ctx || {};
     if (!ctx._transactionConnection) {
       // Create only one conn if concurrent call `beginTransactionScope`
@@ -111,7 +130,7 @@ class RDSClient extends Operator {
    *   To make sure only one active transaction on this ctx.
    * @return {Object} - scope return result
    */
-  async beginDoomedTransactionScope(scope, ctx) {
+  async beginDoomedTransactionScope(scope: (transaction: RDSTransaction) => Promise<any>, ctx?: any): Promise<any> {
     ctx = ctx || {};
     if (!ctx._transactionConnection) {
       ctx._transactionConnection = await this.beginTransaction();
@@ -141,10 +160,3 @@ class RDSClient extends Operator {
     await this.#pool.end();
   }
 }
-
-RDSClient.literals = literals;
-RDSClient.escape = mysql.escape;
-RDSClient.escapeId = mysql.escapeId;
-RDSClient.format = mysql.format;
-RDSClient.raw = mysql.raw;
-module.exports = RDSClient;
