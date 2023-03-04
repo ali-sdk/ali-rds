@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "Node16",
     "outDir": "lib",
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "target": "ES2022"
   },
   "include": [
     "src"

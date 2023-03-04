@@ -1,7 +1,16 @@
+import type { PoolConnection } from 'mysql';
+
+export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {
+  query(sql: string): Promise<any>;
+  beginTransaction(): Promise<void>;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+}
+
 export type SelectOption = {
   where?: object;
   columns?: string | string[];
-  orders?: string | string[];
+  orders?: string | any[];
   limit?: number;
   offset?: number;
 };
@@ -11,8 +20,8 @@ export type InsertOption = {
 };
 
 export type InsertResult = {
-  affectedRows: number;
   fieldCount: number;
+  affectedRows: number;
   insertId: number;
   serverStatus: number;
   warningCount: number;

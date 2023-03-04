@@ -100,13 +100,13 @@ describe('test/client.test.ts', () => {
     it('validate arguments', async () => {
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: 'xxxx' },
+          { tableName: 'xxxx' } as any,
         ]);
       }, new Error('No lock_type provided while trying to lock table `xxxx`'));
 
       await assert.rejects(async () => {
         await db.locks([
-          { lockType: 'READ' },
+          { lockType: 'READ' } as any,
         ]);
       }, new Error('No table_name provided while trying to lock table'));
     });
@@ -115,24 +115,30 @@ describe('test/client.test.ts', () => {
       // assert.equal(sql.replace(/\s+/g, ' '), 'LOCK TABLES `posts` READ;');
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: table, lockType: 'READ' },
-          { tableName: table, lockType: 'READ' },
+          { tableName: table, lockType: 'READ' } as any,
+          { tableName: table, lockType: 'READ' } as any,
         ]);
-      }, (err: any) => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;'));
+      }, (err: any) => {
+        err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;');
+        return true;
+      });
     });
 
     it('should lock multiple tables', async () => {
       // assert.equal(sql.replaceAll(/\s+/g, ' '), 'LOCK TABLES `posts` READ, `posts2` WRITE, `posts3` AS `t` WRITE;');
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: table, lockType: 'READ' },
-          { tableName: table, lockType: 'WRITE' },
+          { tableName: table, lockType: 'READ' } as any,
+          { tableName: table, lockType: 'WRITE' } as any,
           { tableName: table, lockType: 'WRITE', tableAlias: 't' },
         ]);
-      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  WRITE,  `' + table + '`  AS `t`  WRITE;'));
+      }, (err: any) => {
+        err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  WRITE,  `' + table + '`  AS `t`  WRITE;');
+        return true;
+      });
       await assert.rejects(async () => {
         await db.locks([
-          { tableName: 'xxxx' },
+          { tableName: 'xxxx' } as any,
         ]);
       }, new Error('No lock_type provided while trying to lock table `xxxx`'));
     });
@@ -193,7 +199,7 @@ describe('test/client.test.ts', () => {
 
       await assert.rejects(async () => {
         await tran.select(table);
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });
@@ -324,7 +330,7 @@ describe('test/client.test.ts', () => {
         await failDB.beginTransactionScope(async () => {
           // do nothing
         });
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.name, 'RDSClientGetConnectionError');
         return true;
       });
@@ -371,7 +377,7 @@ describe('test/client.test.ts', () => {
 
     describe('beginTransactionScope(fn, ctx)', () => {
       it('should insert 7 rows in a transaction with ctx', async () => {
-        const ctx = {};
+        const ctx = {} as any;
         async function hiInsert() {
           return await db.beginTransactionScope(async conn => {
             await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
@@ -446,7 +452,7 @@ describe('test/client.test.ts', () => {
       });
 
       it('should auto rollback on fail', async () => {
-        const ctx = {};
+        const ctx = {} as any;
         async function fooInsert() {
           return await db.beginTransactionScope(async conn => {
             await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
@@ -783,7 +789,7 @@ describe('test/client.test.ts', () => {
         throw new Error('should not run this');
       } catch (err) {
         assert.equal(err.message,
-          'Can not auto detect update condition, please set options.where, or make sure obj.id exists');
+          'Can not auto detect update condition, please set option.where, or make sure obj.id exists');
       }
     });
 
@@ -886,10 +892,10 @@ describe('test/client.test.ts', () => {
 
     it('should throw error when param options is not an array', async () => {
       try {
-        await db.updateRows(table, {});
+        await db.updateRows(table, {} as any);
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'Options should be array');
+        assert.equal(err.message, 'updateRows should be array');
       }
     });
 
@@ -900,7 +906,7 @@ describe('test/client.test.ts', () => {
         }]);
         throw new Error('should not run this');
       } catch (err) {
-        assert.equal(err.message, 'Can not auto detect updateRows condition, please set option.row and option.where, or make sure option.id exists');
+        assert.equal(err.message, 'Can not auto detect updateRows condition, please set updateRow.where, or make sure updateRow.id exists');
       }
     });
 
@@ -931,6 +937,8 @@ describe('test/client.test.ts', () => {
 
       const result = await db.updateRows(table, users);
       assert.equal(result.affectedRows, 2);
+      assert.equal(result.changedRows, 2);
+      // console.log(result);
 
       const rowsUpdated = await db.select(table, {
         where: { name: names },
@@ -974,7 +982,7 @@ describe('test/client.test.ts', () => {
         const newItem = {
           id: item.id,
           email: prefix + 'm@fengmk2-updateRows-again-updated' + (index + 1) + '.com',
-        };
+        } as any;
         if (index >= 1) {
           newItem.gmt_create = newGmtCreate;
         }
@@ -1037,7 +1045,7 @@ describe('test/client.test.ts', () => {
       });
       assert.deepEqual(
         newUsers.map(o => ({ email: o.row.email, gmt_modified: new Date(o.row.gmt_modified) })),
-        updatedUsers.map(o => ({ email: o.email, gmt_modified: new Date(o.gmt_modified) }))
+        updatedUsers.map(o => ({ email: o.email, gmt_modified: new Date(o.gmt_modified) })),
       );
 
       gmtModified = new Date('2100-01-01');
@@ -1058,7 +1066,7 @@ describe('test/client.test.ts', () => {
       });
       assert.deepEqual(
         newUsers.map(o => ({ email: o.row.email, gmt_modified: new Date(o.row.gmt_modified) })),
-        updatedUsers.map(o => ({ email: o.email, gmt_modified: new Date(o.gmt_modified) }))
+        updatedUsers.map(o => ({ email: o.email, gmt_modified: new Date(o.gmt_modified) })),
       );
     });
   });

@@ -1,10 +1,12 @@
-const { promisify } = require('util');
-const Operator = require('./operator');
+import { promisify } from 'node:util';
+import { Operator } from './operator';
+import type { PoolConnectionPromisify } from './types';
 
 const kWrapToRDS = Symbol('kWrapToRDS');
 
-class RDSConnection extends Operator {
-  constructor(conn) {
+export class RDSConnection extends Operator {
+  conn: PoolConnectionPromisify;
+  constructor(conn: PoolConnectionPromisify) {
     super();
     this.conn = conn;
     if (!this.conn[kWrapToRDS]) {
@@ -24,7 +26,7 @@ class RDSConnection extends Operator {
     return this.conn.release();
   }
 
-  async _query(sql) {
+  async _query(sql: string) {
     return await this.conn.query(sql);
   }
 
@@ -40,5 +42,3 @@ class RDSConnection extends Operator {
     return await this.conn.rollback();
   }
 }
-
-module.exports = RDSConnection;

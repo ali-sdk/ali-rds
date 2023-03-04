@@ -25,7 +25,7 @@ export abstract class Operator {
     return SqlString.escapeId(value, forbidQualified);
   }
 
-  format(sql: string, values: object | any[], stringifyObjects?: boolean, timeZone?: string): string {
+  format(sql: string, values: any, stringifyObjects?: boolean, timeZone?: string): string {
     // if values is object, not null, not Array;
     if (!Array.isArray(values) && typeof values === 'object' && values !== null) {
       // object not support replace column like ??;
@@ -48,7 +48,11 @@ export abstract class Operator {
     debug('query %o', sql);
     try {
       const rows = await this._query(sql);
-      debug('query get %o rows', Array.isArray(rows) ? rows.length : 0);
+      if (Array.isArray(rows)) {
+        debug('query get %o rows', rows.length);
+      } else {
+        debug('query result: %o', rows);
+      }
       return rows;
     } catch (err) {
       err.stack = `${err.stack}\n    sql: ${sql}`;
@@ -237,7 +241,7 @@ export abstract class Operator {
         if (!WHERE[key]) {
           WHERE[key] = [];
         }
-        if (!WHERE[key].include(where[key])) {
+        if (!WHERE[key].includes(where[key])) {
           WHERE[key].push(where[key]);
         }
       }
@@ -289,14 +293,14 @@ export abstract class Operator {
     return await this.query(sql);
   }
 
-  async delete(table: string, where?: object): Promise<DeleteResult> {
+  async delete(table: string, where?: object | null): Promise<DeleteResult> {
     const sql = this.format('DELETE FROM ??', [ table ]) +
       this._where(where);
     debug('delete(%j, %j) \n=> %j', table, where, sql);
     return await this.query(sql);
   }
 
-  _where(where?: object) {
+  _where(where?: object | null) {
     if (!where) {
       return '';
     }
@@ -457,5 +461,3 @@ export abstract class Operator {
     return await this.query('UNLOCK TABLES;');
   }
 }
-
-module.exports = Operator;

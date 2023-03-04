@@ -1,10 +1,21 @@
 import { promisify } from 'node:util';
 import mysql from 'mysql';
 import type { PoolConfig, Pool } from 'mysql';
+import type { PoolConnectionPromisify } from './types';
 import { Operator } from './operator';
 import { RDSConnection } from './connection';
 import { RDSTransaction } from './transaction';
 import literals from './literals';
+
+interface PoolPromisify extends Omit<Pool, 'query'> {
+  query(sql: string): Promise<any>;
+  getConnection(): Promise<PoolConnectionPromisify>;
+  end(): Promise<void>;
+  _acquiringConnections: any[];
+  _allConnections: any[];
+  _freeConnections: any[];
+  _connectionQueue: any[];
+}
 
 export class RDSClient extends Operator {
   static get literals() { return literals; }
@@ -13,10 +24,10 @@ export class RDSClient extends Operator {
   static get format() { return mysql.format; }
   static get raw() { return mysql.raw; }
 
-  #pool: Pool;
+  #pool: PoolPromisify;
   constructor(options: PoolConfig) {
     super();
-    this.#pool = mysql.createPool(options);
+    this.#pool = mysql.createPool(options) as unknown as PoolPromisify;
     [
       'query',
       'getConnection',
@@ -28,7 +39,7 @@ export class RDSClient extends Operator {
 
   // impl Operator._query
   protected async _query(sql: string) {
-    return await (this.#pool as any).query(sql);
+    return await this.#pool.query(sql);
   }
 
   get pool() {
@@ -37,16 +48,16 @@ export class RDSClient extends Operator {
 
   get stats() {
     return {
-      acquiringConnections: (this.#pool as any)._acquiringConnections.length,
-      allConnections: (this.#pool as any)._allConnections.length,
-      freeConnections: (this.#pool as any)._freeConnections.length,
-      connectionQueue: (this.#pool as any)._connectionQueue.length,
+      acquiringConnections: this.#pool._acquiringConnections.length,
+      allConnections: this.#pool._allConnections.length,
+      freeConnections: this.#pool._freeConnections.length,
+      connectionQueue: this.#pool._connectionQueue.length,
     };
   }
 
   async getConnection() {
     try {
-      const conn = await (this.#pool as any).getConnection();
+      const conn = await this.#pool.getConnection();
       return new RDSConnection(conn);
     } catch (err) {
       if (err.name === 'Error') {
@@ -59,9 +70,9 @@ export class RDSClient extends Operator {
   /**
    * Begin a transaction
    *
-   * @return {Transaction} transaction instance
+   * @return {RDSTransaction} transaction instance
    */
-  async beginTransaction() {
+  async beginTransaction(): Promise<RDSTransaction> {
     const conn = await this.getConnection();
     try {
       await conn.beginTransaction();
@@ -146,6 +157,6 @@ export class RDSClient extends Operator {
   }
 
   async end() {
-    await (this.#pool as any).end();
+    await this.#pool.end();
   }
 }

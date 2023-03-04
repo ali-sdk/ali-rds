@@ -10,7 +10,7 @@
     "contributor": "git-contributor",
     "test": "egg-bin test",
     "ci": "npm run lint && egg-bin cov && npm run prepublishOnly",
-    "lint": "eslint .",
+    "lint": "eslint src test --cache",
     "build": "tsc -p ./tsconfig.json",
     "clean": "tsc --build --clean",
     "prepublishOnly": "npm run clean && npm run build"

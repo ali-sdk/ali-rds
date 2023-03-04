@@ -1,10 +1,12 @@
 import { strict as assert } from 'node:assert';
 import { Operator } from '../src/operator';
 
+class CustomOperator extends Operator {}
+
 describe('test/operator.test.ts', () => {
   describe('_where(where)', () => {
     it('should get where sql', () => {
-      const op = new Operator();
+      const op = new CustomOperator();
       assert.equal(op._where(), '');
       assert.equal(op._where({}), '');
       assert.equal(op._where({ id: 1 }), ' WHERE `id` = 1');
@@ -13,7 +15,7 @@ describe('test/operator.test.ts', () => {
       assert.equal(op._where({ id: 1, name3: undefined }), ' WHERE `id` = 1 AND `name3` IS NULL');
       assert.equal(op._where({ 'test.id': 1 }), ' WHERE `test`.`id` = 1');
       assert.equal(op._where({ id: [ 1, 2 ], name: 'foo' }), ' WHERE `id` IN (1, 2) AND `name` = \'foo\'');
-      assert.equal(op._where({ id: [ 1 ], name: 'foo' }, [ 'id', 'name' ]), ' WHERE `id` IN (1) AND `name` = \'foo\'');
+      assert.equal(op._where({ id: [ 1 ], name: 'foo' }), ' WHERE `id` IN (1) AND `name` = \'foo\'');
       // assert.equal(op.where({ 'test.id': new Date(), name: 'foo' }, 'test.id'), ' WHERE `test`.`id` = 1');
       assert.equal(op._where({ name: 'foo\'\"' }), ' WHERE `name` = \'foo\\\'\\\"\'');
       assert.equal(op._where({ id: 1, name: 'foo\'\"' }), ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\'');
@@ -24,17 +26,17 @@ describe('test/operator.test.ts', () => {
 
   describe('format()', () => {
     it('should get literal string', () => {
-      const op = new Operator();
+      const op = new CustomOperator();
       assert.equal(op.format('SET ?? = ?', [ 'dt', op.literals.now ], true), 'SET `dt` = now()');
     });
 
     it('should get literal string by string', () => {
-      const op = new Operator();
+      const op = new CustomOperator();
       assert.equal(op.format('SET name = ?', 'test'), 'SET name = \'test\'');
     });
 
     it('should get literal string by object', () => {
-      const op = new Operator();
+      const op = new CustomOperator();
       assert.equal(op.format('SET dt = :now and name = :name and age = :age', {
         now: op.literals.now,
         name: 'test',
@@ -42,7 +44,7 @@ describe('test/operator.test.ts', () => {
     });
 
     it('should get literal string by boundary', () => {
-      const op = new Operator();
+      const op = new CustomOperator();
       assert.equal(op.format('SET name = ?', null), 'SET name = ?');
       assert.equal(op.format('SET name = ?', undefined), 'SET name = ?');
       assert.equal(op.format('SET name = ?', 0), 'SET name = 0');
@@ -54,10 +56,10 @@ describe('test/operator.test.ts', () => {
   });
 
   describe('_query()', () => {
-    it('should throw error when SubClass not impl', function* () {
-      const op = new Operator();
+    it('should throw error when SubClass not impl', async () => {
+      const op = new CustomOperator();
       try {
-        yield op.query('foo');
+        await op.query('foo');
       } catch (err) {
         assert.equal(err.message.indexOf('SubClass must impl this'), 0);
       }
