@@ -12,12 +12,12 @@
 [download-image]: https://img.shields.io/npm/dm/ali-rds.svg?style=flat-square
 [download-url]: https://npmjs.org/package/ali-rds
 
-Aliyun RDS client. Sub module of [ali-sdk](https://github.com/ali-sdk/ali-sdk).
-
+Aliyun RDS client.
 RDS, Relational Database Service. Equal to well know Amazon [RDS](http://aws.amazon.com/rds/).
-Support `MySQL`, `SQL Server` and `PostgreSQL`.
 
-## MySQL Usage
+Support `MySQL` protocol only.
+
+## Usage
 
 ### Create RDS instance
 
@@ -356,12 +356,6 @@ const rows = await db.query('SELECT * FROM your_table WHERE id=:id', { id: 123 }
 console.log(rows);
 ```
 
-## SQL Server Usage
-
-TBD
-
----
-
 ## APIs
 
 - `*` Meaning this function is yieldable.
@@ -378,7 +372,7 @@ TBD
 - async delete(table, where)
 - async count(table, where)
 
-### Transactions
+### Transactions Helpers
 
 - async beginTransaction()
 - async beginTransactionScope(scope)
@@ -407,14 +401,6 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 ```js
 const session = new db.literals.Literal('session()');
 ```
-
-## TODO
-
-- [x] MySQL
-  - [x] Pool
-  - [ ] Cluster
-- [ ] SQL Server
-- [ ] PostgreSQL
 
 ## License
 
