@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/ali-sdk/ali-rds/compare/v4.1.0...v5.0.0) (2023-03-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop Node.js < 16 support
+
+### Features
+
+* impl with typescript ([#103](https://github.com/ali-sdk/ali-rds/issues/103)) ([1cf7814](https://github.com/ali-sdk/ali-rds/commit/1cf7814effb2876919e73d331547ecd14caf45f4))
+
 ## [4.1.0](https://github.com/ali-sdk/ali-rds/compare/v4.0.3...v4.1.0) (2023-01-01)
 
 
