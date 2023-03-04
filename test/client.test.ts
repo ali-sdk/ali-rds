@@ -1,19 +1,19 @@
-const assert = require('assert').strict;
-const fs = require('fs/promises');
-const path = require('path');
-const RDSClient = require('..');
-const config = require('./config');
+import { strict as assert } from 'node:assert';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import config from './config';
+import { RDSClient } from '../src/client';
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
 }
 
-describe('test/client.test.js', () => {
+describe('test/client.test.ts', () => {
   const prefix = 'prefix-' + process.version + '-';
   const table = 'ali-sdk-test-user';
-  let db;
+  let db: RDSClient;
   before(async () => {
     db = new RDSClient(config);
     try {
@@ -123,7 +123,7 @@ describe('test/client.test.js', () => {
           { tableName: table, lockType: 'READ' },
           { tableName: table, lockType: 'READ' },
         ]);
-      }, err => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;'));
+      }, (err: any) => err.sql.includes('LOCK TABLES  `' + table + '`  READ,  `' + table + '`  READ;'));
     });
 
     it('should lock multiple tables', async () => {
@@ -160,7 +160,7 @@ describe('test/client.test.js', () => {
       });
       await assert.rejects(async () => {
         await failDB.beginTransaction();
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.name, 'RDSClientGetConnectionError');
         return true;
       });
@@ -172,21 +172,21 @@ describe('test/client.test.js', () => {
 
       await assert.rejects(async () => {
         await tran.select(table);
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });
 
       await assert.rejects(async () => {
         await tran.rollback();
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });
 
       await assert.rejects(async () => {
         await tran.commit();
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });
@@ -205,14 +205,14 @@ describe('test/client.test.js', () => {
 
       await assert.rejects(async () => {
         await tran.rollback();
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });
 
       await assert.rejects(async () => {
         await tran.commit();
-      }, err => {
+      }, (err: Error) => {
         assert.equal(err.message, 'transaction was commit or rollback');
         return true;
       });

@@ -1,6 +1,6 @@
 const database = process.env.CI ? 'unittest' : 'test';
 
-module.exports = {
+export default {
   host: 'localhost',
   port: 3306,
   user: 'root',

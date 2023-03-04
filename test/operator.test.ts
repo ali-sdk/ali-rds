@@ -1,9 +1,9 @@
-const assert = require('assert');
-const Operator = require('../lib/operator');
+import { strict as assert } from 'node:assert';
+import { Operator } from '../src/operator';
 
-describe('operator.test.js', function() {
-  describe('_where(where)', function() {
-    it('should get where sql', function() {
+describe('test/operator.test.ts', () => {
+  describe('_where(where)', () => {
+    it('should get where sql', () => {
       const op = new Operator();
       assert.equal(op._where(), '');
       assert.equal(op._where({}), '');
@@ -22,18 +22,18 @@ describe('operator.test.js', function() {
     });
   });
 
-  describe('format()', function() {
-    it('should get literal string', function() {
+  describe('format()', () => {
+    it('should get literal string', () => {
       const op = new Operator();
       assert.equal(op.format('SET ?? = ?', [ 'dt', op.literals.now ], true), 'SET `dt` = now()');
     });
 
-    it('should get literal string by string', function() {
+    it('should get literal string by string', () => {
       const op = new Operator();
       assert.equal(op.format('SET name = ?', 'test'), 'SET name = \'test\'');
     });
 
-    it('should get literal string by object', function() {
+    it('should get literal string by object', () => {
       const op = new Operator();
       assert.equal(op.format('SET dt = :now and name = :name and age = :age', {
         now: op.literals.now,
@@ -41,7 +41,7 @@ describe('operator.test.js', function() {
       }), 'SET dt = now() and name = \'test\' and age = :age');
     });
 
-    it('should get literal string by boundary', function() {
+    it('should get literal string by boundary', () => {
       const op = new Operator();
       assert.equal(op.format('SET name = ?', null), 'SET name = ?');
       assert.equal(op.format('SET name = ?', undefined), 'SET name = ?');
@@ -53,7 +53,7 @@ describe('operator.test.js', function() {
     });
   });
 
-  describe('_query()', function() {
+  describe('_query()', () => {
     it('should throw error when SubClass not impl', function* () {
       const op = new Operator();
       try {

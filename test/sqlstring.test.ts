@@ -1,9 +1,9 @@
-const assert = require('assert');
-const mysql = require('mysql');
-const SqlString = require('../lib/sqlstring');
-const literals = require('../lib/literals');
+import { strict as assert } from 'node:assert';
+import mysql from 'mysql';
+import { SqlString } from '../src/sqlstring';
+import { literals } from '../src/literals';
 
-describe('sqlstring.test.js', () => {
+describe('test/sqlstring.test.ts', () => {
   describe('escape()', () => {
     it('should patch escape to support Literal class', () => {
       assert.equal(SqlString.escape(literals.now), 'now()');
