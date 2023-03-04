@@ -1,24 +1,31 @@
-const debug = require('util').debuglog('ali-rds:operator');
-const SqlString = require('./sqlstring');
-const literals = require('./literals');
+import { debuglog } from 'node:util';
+import { SqlString } from './sqlstring';
+import literals from './literals';
+import {
+  DeleteResult,
+  InsertOption, InsertResult,
+  LockResult, LockTableOption,
+  SelectOption,
+  UpdateOption, UpdateResult, UpdateRow,
+} from './types';
+
+const debug = debuglog('ali-rds:operator');
 
 /**
  * Operator Interface
  */
-class Operator {
-  constructor() {
-    this.literals = literals;
-  }
+export abstract class Operator {
+  get literals() { return literals; }
 
-  escape(value, stringifyObjects, timeZone) {
+  escape(value: any, stringifyObjects?: boolean, timeZone?: string): string {
     return SqlString.escape(value, stringifyObjects, timeZone);
   }
 
-  escapeId(value, forbidQualified) {
+  escapeId(value: any, forbidQualified?: boolean): string {
     return SqlString.escapeId(value, forbidQualified);
   }
 
-  format(sql, values, stringifyObjects, timeZone) {
+  format(sql: string, values: object | any[], stringifyObjects?: boolean, timeZone?: string): string {
     // if values is object, not null, not Array;
     if (!Array.isArray(values) && typeof values === 'object' && values !== null) {
       // object not support replace column like ??;
@@ -33,33 +40,34 @@ class Operator {
     return SqlString.format(sql, values, stringifyObjects, timeZone);
   }
 
-  async query(sql, values) {
+  async query<T = any>(sql: string, values?: object | any[]): Promise<T> {
     // query(sql, values)
-    if (arguments.length >= 2) {
+    if (values) {
       sql = this.format(sql, values);
     }
-    debug('query %j', sql);
+    debug('query %o', sql);
     try {
       const rows = await this._query(sql);
-      debug('query get %d rows', rows.length);
+      debug('query get %o rows', Array.isArray(rows) ? rows.length : 0);
       return rows;
     } catch (err) {
-      err.stack = err.stack + '\n    sql: ' + sql;
-      debug('query error: %s', err);
+      err.stack = `${err.stack}\n    sql: ${sql}`;
+      debug('query error: %o', err);
       throw err;
     }
   }
 
-  async queryOne(sql, values) {
+  async queryOne(sql: string, values?: object | any[]) {
     const rows = await this.query(sql, values);
     return rows && rows[0] || null;
   }
 
-  async _query(/* sql */) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected async _query(_sql: string): Promise<any> {
     throw new Error('SubClass must impl this');
   }
 
-  async count(table, where) {
+  async count(table: string, where?: object) {
     const sql = this.format('SELECT COUNT(*) as count FROM ??', [ table ]) +
       this._where(where);
     debug('count(%j, %j) \n=> %j', table, where, sql);
@@ -71,7 +79,7 @@ class Operator {
    * Select rows from a table
    *
    * @param  {String} table     table name
-   * @param  {Object} [options] optional params
+   * @param  {Object} [option] optional params
    *  - {Object} where          query condition object
    *  - {Array|String} columns  select columns, default is `'*'`
    *  - {Array|String} orders   result rows sort condition
@@ -79,45 +87,47 @@ class Operator {
    *  - {Number} offset         result offset, default is `0`
    * @return {Array} result rows
    */
-  async select(table, options) {
-    options = options || {};
-    const sql = this._selectColumns(table, options.columns) +
-      this._where(options.where) +
-      this._orders(options.orders) +
-      this._limit(options.limit, options.offset);
-    debug('select(%j, %j) \n=> %j', table, options, sql);
+  async select(table: string, option?: SelectOption): Promise<any[]> {
+    option = option || {};
+    const sql = this._selectColumns(table, option.columns) +
+      this._where(option.where) +
+      this._orders(option.orders) +
+      this._limit(option.limit, option.offset);
+    debug('select(%o, %o) \n=> %o', table, option, sql);
     return await this.query(sql);
   }
 
-  async get(table, where, options) {
-    options = options || {};
-    options.where = where;
-    options.limit = 1;
-    options.offset = 0;
-    const rows = await this.select(table, options);
+  async get(table: string, where?: object, option?: SelectOption) {
+    option = option || {};
+    option.where = where;
+    option.limit = 1;
+    option.offset = 0;
+    const rows = await this.select(table, option);
     return rows && rows[0] || null;
   }
 
-  async insert(table, rows, options) {
-    options = options || {};
-    let firstObj;
+  async insert(table: string, rows: object | object[], option?: InsertOption): Promise<InsertResult> {
+    option = option || {};
+    let insertRows: object[];
+    let firstObj: object;
     // insert(table, rows)
     if (Array.isArray(rows)) {
       firstObj = rows[0];
+      insertRows = rows;
     } else {
       // insert(table, row)
       firstObj = rows;
-      rows = [ rows ];
+      insertRows = [ rows ];
     }
-    if (!options.columns) {
-      options.columns = Object.keys(firstObj);
+    if (!option.columns) {
+      option.columns = Object.keys(firstObj);
     }
 
-    const params = [ table, options.columns ];
-    const strs = [];
-    for (const row of rows) {
-      const values = [];
-      for (const column of options.columns) {
+    const params = [ table, option.columns ];
+    const strs: string[] = [];
+    for (const row of insertRows) {
+      const values: any[] = [];
+      for (const column of option.columns) {
         values.push(row[column]);
       }
       strs.push('(?)');
@@ -125,40 +135,39 @@ class Operator {
     }
 
     const sql = this.format('INSERT INTO ??(??) VALUES' + strs.join(', '), params);
-    debug('insert(%j, %j, %j) \n=> %j', table, rows, options, sql);
+    debug('insert(%o, %o, %o) \n=> %o', table, rows, option, sql);
     return await this.query(sql);
   }
 
-  async update(table, row, options) {
-    options = options || {};
-    if (!options.columns) {
-      options.columns = Object.keys(row);
+  async update(table: string, row: object, option?: UpdateOption): Promise<UpdateResult> {
+    option = option || {};
+    if (!option.columns) {
+      option.columns = Object.keys(row);
     }
-    if (!options.where) {
+    if (!option.where) {
       if (!('id' in row)) {
-        throw new Error('Can not auto detect update condition, please set options.where, or make sure obj.id exists');
+        throw new Error('Can not auto detect update condition, please set option.where, or make sure obj.id exists');
       }
-      options.where = {
+      option.where = {
         id: row.id,
       };
     }
 
-    const sets = [];
-    const values = [];
-    for (const column of options.columns) {
+    const sets: string[] = [];
+    const values: any[] = [];
+    for (const column of option.columns) {
       sets.push('?? = ?');
       values.push(column);
       values.push(row[column]);
     }
     const sql = this.format('UPDATE ?? SET ', [ table ]) +
       this.format(sets.join(', '), values) +
-      this._where(options.where);
-    debug('update(%j, %j, %j) \n=> %j', table, row, options, sql);
+      this._where(option.where);
+    debug('update(%o, %o, %o) \n=> %o', table, row, option, sql);
     return await this.query(sql);
   }
 
   /**
-   *
    * Update multiple rows from a table
    *
    * UPDATE `table_name` SET
@@ -177,18 +186,17 @@ class Operator {
    * See MySQL Case Syntax: https://dev.mysql.com/doc/refman/5.7/en/case.html
    *
    * @param {String} table table name
-   * @param {Array<Object>} options Object Arrays
+   * @param {Array<Object>} updateRows Object Arrays
    *    each Object needs a primary key `id`, or each Object has `row` and `where` properties
    *    e.g.
    *      [{ id: 1, name: 'fengmk21' }]
    *      or [{ row: { name: 'fengmk21' }, where: { id: 1 } }]
    * @return {object} update result
    */
-  async updateRows(table, options) {
-    if (!Array.isArray(options)) {
-      throw new Error('Options should be array');
+  async updateRows(table: string, updateRows: UpdateRow[]): Promise<UpdateResult> {
+    if (!Array.isArray(updateRows)) {
+      throw new Error('updateRows should be array');
     }
-
     /**
      * {
      *  column: {
@@ -201,47 +209,44 @@ class Operator {
     // e.g. { id: [], column: [] }
     const WHERE = {};
 
-    options.forEach(option => {
-      if (!option.hasOwnProperty('id') && !(option.row && option.where)) {
-        throw new Error('Can not auto detect updateRows condition, please set option.row and option.where, or make sure option.id exists');
+    for (const updateRow of updateRows) {
+      const row = updateRow.row ?? updateRow;
+      let where = updateRow.where;
+      const hasId = 'id' in row;
+      if (!hasId && !where) {
+        throw new Error('Can not auto detect updateRows condition, please set updateRow.where, or make sure updateRow.id exists');
       }
 
       // convert { id, column } to { row: { column }, where: { id } }
-      if (option.hasOwnProperty('id')) {
-        const where = { id: option.id };
-        const row = Object.keys(option).reduce((result, key) => {
-          if (key !== 'id') {
-            result[key] = option[key];
-          }
-          return result;
-        }, {});
-        option = { row, where };
+      if (hasId) {
+        where = { id: updateRow.id };
       }
 
-      let where = this._where(option.where);
-      where = where.indexOf('WHERE') === -1 ? where : where.substring(where.indexOf('WHERE') + 5);
-      for (const key in option.row) {
+      let whereString = this._where(where);
+      whereString = !whereString.includes('WHERE') ? whereString : whereString.substring(whereString.indexOf('WHERE') + 5);
+      for (const key in row) {
+        if (key === 'id') continue;
         if (!SQL_CASE[key]) {
           SQL_CASE[key] = { when: [], then: [] };
         }
-        SQL_CASE[key].when.push(' WHEN ' + where + ' THEN ? ');
-        SQL_CASE[key].then.push(option.row[key]);
+        SQL_CASE[key].when.push(' WHEN ' + whereString + ' THEN ? ');
+        SQL_CASE[key].then.push(row[key]);
       }
 
-      for (const key in option.where) {
+      for (const key in where) {
         if (!WHERE[key]) {
           WHERE[key] = [];
         }
-        if (WHERE[key].indexOf(option.where[key]) === -1) {
-          WHERE[key].push(option.where[key]);
+        if (!WHERE[key].include(where[key])) {
+          WHERE[key].push(where[key]);
         }
       }
-    });
+    }
 
-    let SQL = [ 'UPDATE ?? SET ' ];
+    let SQL = 'UPDATE ?? SET ';
     let VALUES = [ table ];
 
-    const TEMPLATE = [];
+    const TEMPLATE: string[] = [];
     for (const key in SQL_CASE) {
       let templateSql = ' ?? = CASE ';
       VALUES.push(key);
@@ -280,24 +285,24 @@ class Operator {
      *  WHERE `id` IN (1, 2, 3)
      */
     const sql = this.format(SQL, VALUES);
-    debug('updateRows(%j, %j) \n=> %j', table, options, sql);
+    debug('updateRows(%o, %o) \n=> %o', table, updateRows, sql);
     return await this.query(sql);
   }
 
-  async delete(table, where) {
+  async delete(table: string, where?: object): Promise<DeleteResult> {
     const sql = this.format('DELETE FROM ??', [ table ]) +
       this._where(where);
     debug('delete(%j, %j) \n=> %j', table, where, sql);
     return await this.query(sql);
   }
 
-  _where(where) {
+  _where(where?: object) {
     if (!where) {
       return '';
     }
 
-    const wheres = [];
-    const values = [];
+    const wheres: string[] = [];
+    const values: any[] = [];
     for (const key in where) {
       const value = where[key];
       if (Array.isArray(value)) {
@@ -318,27 +323,24 @@ class Operator {
     return '';
   }
 
-  _selectColumns(table, columns) {
-    if (!columns) {
+  _selectColumns(table: string, columns?: string | string[]) {
+    if (!columns || columns.length === 0) {
       columns = '*';
     }
-    let sql;
     if (columns === '*') {
-      sql = this.format('SELECT * FROM ??', [ table ]);
-    } else {
-      sql = this.format('SELECT ?? FROM ??', [ columns, table ]);
+      return this.format('SELECT * FROM ??', [ table ]);
     }
-    return sql;
+    return this.format('SELECT ?? FROM ??', [ columns, table ]);
   }
 
-  _orders(orders) {
+  _orders(orders?: string | string[]) {
     if (!orders) {
       return '';
     }
     if (typeof orders === 'string') {
       orders = [ orders ];
     }
-    const values = [];
+    const values: string[] = [];
     for (const value of orders) {
       if (typeof value === 'string') {
         values.push(this.escapeId(value));
@@ -346,7 +348,7 @@ class Operator {
         // value format: ['name', 'desc'], ['name'], ['name', 'asc']
         let sort = String(value[1]).toUpperCase();
         if (sort !== 'ASC' && sort !== 'DESC') {
-          sort = null;
+          sort = '';
         }
         if (sort) {
           values.push(this.escapeId(value[0]) + ' ' + sort);
@@ -358,7 +360,7 @@ class Operator {
     return ' ORDER BY ' + values.join(', ');
   }
 
-  _limit(limit, offset) {
+  _limit(limit?: number, offset?: number) {
     if (!limit || typeof limit !== 'number') {
       return '';
     }
@@ -370,7 +372,7 @@ class Operator {
 
   /**
    * Lock tables.
-   * @param {object[]} tables table lock descriptions.
+   * @param {object[]} lockTableOptions table lock descriptions.
    * @description
    * LOCK TABLES
    *   tbl_name [[AS] alias] lock_type
@@ -384,17 +386,17 @@ class Operator {
    * @example
    * await locks([{ tableName: 'posts', lockType: 'READ', tableAlias: 't' }]);
    */
-  async locks(tables) {
-    const sql = this.#locks(tables);
-    debug('lock tables \n=> %j', sql);
+  async locks(lockTableOptions: LockTableOption[]) {
+    const sql = this.#locks(lockTableOptions);
+    debug('lock tables \n=> %o', sql);
     return await this.query(sql);
   }
 
   /**
    * Lock a single table.
-   * @param {string} tableName
-   * @param {string} lockType
-   * @param {string} tableAlias
+   * @param {string} tableName table name
+   * @param {string} lockType lock type
+   * @param {string} tableAlias table alias
    * @description
    * LOCK TABLES
    *   tbl_name [[AS] alias] lock_type
@@ -408,35 +410,30 @@ class Operator {
    * @example
    * await lockOne('posts_table', 'READ', 't'); // LOCK TABLS 'posts_table' AS t READ
    */
-  async lockOne(tableName, lockType, tableAlias) {
-    const sql = this.#locks([{
-      tableName,
-      lockType,
-      tableAlias,
-    }]);
-    debug('lock one table \n=> %j', sql);
+  async lockOne(tableName: string, lockType: string, tableAlias: string): Promise<LockResult> {
+    const sql = this.#locks([{ tableName, lockType, tableAlias }]);
+    debug('lock one table \n=> %o', sql);
     return await this.query(sql);
   }
 
-  #locks(tableLocks) {
-    if (tableLocks.length === 0) {
+  #locks(lockTableOptions: LockTableOption[]) {
+    if (lockTableOptions.length === 0) {
       throw new Error('Cannot lock empty tables.');
     }
     let sql = 'LOCK TABLES ';
-    for (let i = 0; i < tableLocks.length; i++) {
-      const table = tableLocks[i];
-      const { tableName, lockType, tableAlias } = table;
+    for (const [ index, lockTableOption ] of lockTableOptions.entries()) {
+      const { tableName, lockType, tableAlias } = lockTableOption;
       if (!tableName) {
         throw new Error('No table_name provided while trying to lock table');
       }
       if (!lockType) {
         throw new Error('No lock_type provided while trying to lock table `' + tableName + '`');
       }
-      if ([ 'READ', 'WRITE', 'READ LOCAL', 'LOW_PRIORITY WRITE' ].indexOf(lockType.toUpperCase()) < 0) {
+      if (![ 'READ', 'WRITE', 'READ LOCAL', 'LOW_PRIORITY WRITE' ].includes(lockType.toUpperCase())) {
         throw new Error('lock_type provided while trying to lock table `' + tableName +
         '` must be one of the following(CASE INSENSITIVE):\n`READ` | `WRITE` | `READ LOCAL` | `LOW_PRIORITY WRITE`');
       }
-      if (i > 0) {
+      if (index > 0) {
         sql += ', ';
       }
       sql += ' ' + this.escapeId(tableName) + ' ';

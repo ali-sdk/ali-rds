@@ -1,14 +1,9 @@
 import { strict as assert } from 'node:assert';
+import { setTimeout } from 'node:timers/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import config from './config';
 import { RDSClient } from '../src/client';
-
-function sleep(ms: number) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
 
 describe('test/client.test.ts', () => {
   const prefix = 'prefix-' + process.version + '-';
@@ -505,13 +500,13 @@ describe('test/client.test.ts', () => {
           await conn.query(
             'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
             [ prefix + 'should-safe-with-yield-array-1', prefix + 'm@should-safe-with-yield-array-1.com' ]);
-          await sleep(100);
+          await setTimeout(100);
         }, ctx),
         await db.beginTransactionScope(async conn => {
           await conn.query(
             'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
             [ prefix + 'should-safe-with-yield-array-2', prefix + 'm@should-safe-with-yield-array-1.com' ]);
-          await sleep(200);
+          await setTimeout(200);
         }, ctx),
       ]);
       const rows = await db.query(
