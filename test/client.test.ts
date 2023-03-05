@@ -1209,13 +1209,21 @@ describe('test/client.test.ts', () => {
       const db = new RDSClient(config);
       let count = 0;
       let lastSql = '';
+      let counter2Before = 0;
+      let counter2After = 0;
       db.beforeQuery(sql => {
         count++;
         lastSql = sql;
       });
+      db.beforeQuery(() => {
+        counter2Before++;
+      });
       let lastArgs: any;
       db.afterQuery((...args) => {
         lastArgs = args;
+      });
+      db.afterQuery(() => {
+        counter2After++;
       });
       await db.query('select * from ?? limit 10', [ table ]);
       assert.equal(lastSql, 'select * from `ali-sdk-test-user` limit 10');
@@ -1256,6 +1264,8 @@ describe('test/client.test.ts', () => {
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
       assert.equal(count, 4);
+      assert.equal(counter2Before, 4);
+      assert.equal(counter2After, 4);
     });
   });
 });

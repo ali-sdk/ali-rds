@@ -59,11 +59,15 @@ export class RDSClient extends Operator {
     try {
       const _conn = await this.#pool.getConnection();
       const conn = new RDSConnection(_conn);
-      if (this.beforeQueryHandler) {
-        conn.beforeQuery(this.beforeQueryHandler);
+      if (this.beforeQueryHandlers.length > 0) {
+        for (const handler of this.beforeQueryHandlers) {
+          conn.beforeQuery(handler);
+        }
       }
-      if (this.afterQueryHandler) {
-        conn.afterQuery(this.afterQueryHandler);
+      if (this.afterQueryHandlers.length > 0) {
+        for (const handler of this.afterQueryHandlers) {
+          conn.afterQuery(handler);
+        }
       }
       return conn;
     } catch (err) {
@@ -88,11 +92,15 @@ export class RDSClient extends Operator {
       throw err;
     }
     const tran = new RDSTransaction(conn);
-    if (this.beforeQueryHandler) {
-      tran.beforeQuery(this.beforeQueryHandler);
+    if (this.beforeQueryHandlers.length > 0) {
+      for (const handler of this.beforeQueryHandlers) {
+        tran.beforeQuery(handler);
+      }
     }
-    if (this.afterQueryHandler) {
-      tran.afterQuery(this.afterQueryHandler);
+    if (this.afterQueryHandlers.length > 0) {
+      for (const handler of this.afterQueryHandlers) {
+        tran.afterQuery(handler);
+      }
     }
     return tran;
   }
