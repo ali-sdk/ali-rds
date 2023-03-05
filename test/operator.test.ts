@@ -65,4 +65,65 @@ describe('test/operator.test.ts', () => {
       }
     });
   });
+
+  describe('beforeQuery(), afterQuery()', () => {
+    class CustomOperator extends Operator {
+      protected async _query(sql: string): Promise<any> {
+        // console.log(sql);
+        if (sql === 'error') throw new Error('mock error');
+        return { sql };
+      }
+    }
+
+    it('should override query sql', async () => {
+      const op = new CustomOperator();
+      op.beforeQuery(sql => {
+        return `hello ${sql}`;
+      });
+      const result = await op.query('foo');
+      assert.equal(result.sql, 'hello foo');
+    });
+
+    it('should not override query sql', async () => {
+      const op = new CustomOperator();
+      op.beforeQuery(sql => {
+        assert(sql);
+      });
+      const result = await op.query('foo');
+      assert.equal(result.sql, 'foo');
+    });
+
+    it('should get query result on after hook', async () => {
+      const op = new CustomOperator();
+      op.afterQuery((sql, result, execDuration, err) => {
+        assert.equal(sql, 'foo');
+        assert.deepEqual(result, { sql });
+        assert.equal(typeof execDuration, 'number');
+        assert(execDuration >= 0);
+        assert.equal(err, undefined);
+      });
+      const result = await op.query('foo');
+      assert.equal(result.sql, 'foo');
+    });
+
+    it('should get query error on after hook', async () => {
+      const op = new CustomOperator();
+      op.afterQuery((sql, result, execDuration, err) => {
+        assert.equal(sql, 'error');
+        assert.equal(result, null);
+        assert.equal(typeof execDuration, 'number');
+        assert(execDuration >= 0);
+        assert(err instanceof Error);
+        assert.equal(err.message, 'mock error');
+        assert.match(err.stack!, /sql: error/);
+      });
+      await assert.rejects(async () => {
+        await op.query('error');
+      }, (err: any) => {
+        assert.equal(err.message, 'mock error');
+        assert.match(err.stack, /sql: error/);
+        return true;
+      });
+    });
+  });
 });
