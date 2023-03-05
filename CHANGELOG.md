@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.1](https://github.com/ali-sdk/ali-rds/compare/v5.1.0...v5.1.1) (2023-03-05)
+
+
+### Bug Fixes
+
+* support multi lifecricle hooks ([#105](https://github.com/ali-sdk/ali-rds/issues/105)) ([53b0a70](https://github.com/ali-sdk/ali-rds/commit/53b0a7058e4f3e583dc4610b1d1338014b9f2c15))
+
 ## [5.1.0](https://github.com/ali-sdk/ali-rds/compare/v5.0.0...v5.1.0) (2023-03-05)
 
 
