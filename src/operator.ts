@@ -331,7 +331,7 @@ export abstract class Operator {
     return await this.query(sql);
   }
 
-  _where(where?: object | null) {
+  protected _where(where?: object | null) {
     if (!where) {
       return '';
     }
@@ -358,7 +358,7 @@ export abstract class Operator {
     return '';
   }
 
-  _selectColumns(table: string, columns?: string | string[]) {
+  protected _selectColumns(table: string, columns?: string | string[]) {
     if (!columns || columns.length === 0) {
       columns = '*';
     }
@@ -368,7 +368,7 @@ export abstract class Operator {
     return this.format('SELECT ?? FROM ??', [ columns, table ]);
   }
 
-  _orders(orders?: string | string[]) {
+  protected _orders(orders?: string | string[]) {
     if (!orders) {
       return '';
     }
@@ -395,7 +395,7 @@ export abstract class Operator {
     return ' ORDER BY ' + values.join(', ');
   }
 
-  _limit(limit?: number, offset?: number) {
+  protected _limit(limit?: number, offset?: number) {
     if (!limit || typeof limit !== 'number') {
       return '';
     }
