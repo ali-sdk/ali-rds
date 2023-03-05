@@ -2,6 +2,7 @@ import { debuglog } from 'node:util';
 import { SqlString } from './sqlstring';
 import literals from './literals';
 import {
+  AfterQueryHandler, BeforeQueryHandler,
   DeleteResult,
   InsertOption, InsertResult,
   LockResult, LockTableOption,
@@ -15,7 +16,18 @@ const debug = debuglog('ali-rds:operator');
  * Operator Interface
  */
 export abstract class Operator {
+  protected beforeQueryHandler?: BeforeQueryHandler;
+  protected afterQueryHandler?: AfterQueryHandler;
+
   get literals() { return literals; }
+
+  beforeQuery(beforeQueryHandler: BeforeQueryHandler) {
+    this.beforeQueryHandler = beforeQueryHandler;
+  }
+
+  afterQuery(afterQueryHandler: AfterQueryHandler) {
+    this.afterQueryHandler = afterQueryHandler;
+  }
 
   escape(value: any, stringifyObjects?: boolean, timeZone?: string): string {
     return SqlString.escape(value, stringifyObjects, timeZone);
@@ -45,9 +57,21 @@ export abstract class Operator {
     if (values) {
       sql = this.format(sql, values);
     }
+    if (this.beforeQueryHandler) {
+      const newSql = this.beforeQueryHandler(sql);
+      if (newSql) {
+        sql = newSql;
+      }
+    }
     debug('query %o', sql);
+    let execDuration: number;
+    const queryStart = Date.now();
     try {
       const rows = await this._query(sql);
+      execDuration = Date.now() - queryStart;
+      if (this.afterQueryHandler) {
+        this.afterQueryHandler(sql, rows, execDuration);
+      }
       if (Array.isArray(rows)) {
         debug('query get %o rows', rows.length);
       } else {
@@ -55,7 +79,11 @@ export abstract class Operator {
       }
       return rows;
     } catch (err) {
+      execDuration = Date.now() - queryStart;
       err.stack = `${err.stack}\n    sql: ${sql}`;
+      if (this.afterQueryHandler) {
+        this.afterQueryHandler(sql, null, execDuration, err);
+      }
       debug('query error: %o', err);
       throw err;
     }

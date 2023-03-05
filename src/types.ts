@@ -50,3 +50,6 @@ export type LockTableOption = {
   lockType: string;
   tableAlias: string;
 };
+
+export type BeforeQueryHandler = (sql: string) => string | undefined | void;
+export type AfterQueryHandler = (sql: string, result: any, execDuration: number, err?: Error) => void;

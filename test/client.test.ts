@@ -1203,4 +1203,59 @@ describe('test/client.test.ts', () => {
       await db2.end();
     });
   });
+
+  describe('query lifecricle work', () => {
+    it('should work on client and transactions', async () => {
+      const db = new RDSClient(config);
+      let count = 0;
+      let lastSql = '';
+      db.beforeQuery(sql => {
+        count++;
+        lastSql = sql;
+      });
+      let lastArgs: any;
+      db.afterQuery((...args) => {
+        lastArgs = args;
+      });
+      await db.query('select * from ?? limit 10', [ table ]);
+      assert.equal(lastSql, 'select * from `ali-sdk-test-user` limit 10');
+      assert.equal(lastArgs[0], lastSql);
+      assert.equal(Array.isArray(lastArgs[1]), true);
+      assert.equal(count, 1);
+
+      await db.beginTransactionScope(async conn => {
+        await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+          values(?, ?, now(), now())`,
+        [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
+      });
+      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+        "          values('prefix-v18.14.1-beginTransactionScope1', 'prefix-v18.14.1-m@beginTransactionScope1.com', now(), now())");
+      assert.equal(lastArgs[0], lastSql);
+      assert.equal(lastArgs[1].affectedRows, 1);
+      assert.equal(count, 2);
+
+      await db.beginDoomedTransactionScope(async conn => {
+        await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+          values(?, ?, now(), now())`,
+        [ table, prefix + 'beginDoomedTransactionScope1', prefix + 'm@beginDoomedTransactionScope1.com' ]);
+      });
+      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+        "          values('prefix-v18.14.1-beginDoomedTransactionScope1', 'prefix-v18.14.1-m@beginDoomedTransactionScope1.com', now(), now())");
+      assert.equal(lastArgs[0], lastSql);
+      assert.equal(lastArgs[1].affectedRows, 1);
+      assert.equal(count, 3);
+
+      const conn = await db.getConnection();
+      await conn.beginTransaction();
+      await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+        values(?, ?, now(), now())`,
+      [ table, prefix + 'transaction1', prefix + 'm@transaction1.com' ]);
+      await conn.commit();
+      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+        "        values('prefix-v18.14.1-transaction1', 'prefix-v18.14.1-m@transaction1.com', now(), now())");
+      assert.equal(lastArgs[0], lastSql);
+      assert.equal(lastArgs[1].affectedRows, 1);
+      assert.equal(count, 4);
+    });
+  });
 });

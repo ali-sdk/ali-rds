@@ -57,8 +57,15 @@ export class RDSClient extends Operator {
 
   async getConnection() {
     try {
-      const conn = await this.#pool.getConnection();
-      return new RDSConnection(conn);
+      const _conn = await this.#pool.getConnection();
+      const conn = new RDSConnection(_conn);
+      if (this.beforeQueryHandler) {
+        conn.beforeQuery(this.beforeQueryHandler);
+      }
+      if (this.afterQueryHandler) {
+        conn.afterQuery(this.afterQueryHandler);
+      }
+      return conn;
     } catch (err) {
       if (err.name === 'Error') {
         err.name = 'RDSClientGetConnectionError';
@@ -80,7 +87,14 @@ export class RDSClient extends Operator {
       conn.release();
       throw err;
     }
-    return new RDSTransaction(conn);
+    const tran = new RDSTransaction(conn);
+    if (this.beforeQueryHandler) {
+      tran.beforeQuery(this.beforeQueryHandler);
+    }
+    if (this.afterQueryHandler) {
+      tran.afterQuery(this.afterQueryHandler);
+    }
+    return tran;
   }
 
   /**
