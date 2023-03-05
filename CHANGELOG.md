@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.0](https://github.com/ali-sdk/ali-rds/compare/v5.0.0...v5.1.0) (2023-03-05)
+
+
+### Features
+
+* support custom query lifecricle ([#104](https://github.com/ali-sdk/ali-rds/issues/104)) ([5941c69](https://github.com/ali-sdk/ali-rds/commit/5941c69b461ad581aa88c211ee6c60a88d4f5420))
+
 ## [5.0.0](https://github.com/ali-sdk/ali-rds/compare/v4.1.0...v5.0.0) (2023-03-04)
 
 
