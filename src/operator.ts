@@ -16,17 +16,17 @@ const debug = debuglog('ali-rds:operator');
  * Operator Interface
  */
 export abstract class Operator {
-  protected beforeQueryHandler?: BeforeQueryHandler;
-  protected afterQueryHandler?: AfterQueryHandler;
+  protected beforeQueryHandlers: BeforeQueryHandler[] = [];
+  protected afterQueryHandlers: AfterQueryHandler[] = [];
 
   get literals() { return literals; }
 
   beforeQuery(beforeQueryHandler: BeforeQueryHandler) {
-    this.beforeQueryHandler = beforeQueryHandler;
+    this.beforeQueryHandlers.push(beforeQueryHandler);
   }
 
   afterQuery(afterQueryHandler: AfterQueryHandler) {
-    this.afterQueryHandler = afterQueryHandler;
+    this.afterQueryHandlers.push(afterQueryHandler);
   }
 
   escape(value: any, stringifyObjects?: boolean, timeZone?: string): string {
@@ -57,21 +57,20 @@ export abstract class Operator {
     if (values) {
       sql = this.format(sql, values);
     }
-    if (this.beforeQueryHandler) {
-      const newSql = this.beforeQueryHandler(sql);
-      if (newSql) {
-        sql = newSql;
+    if (this.beforeQueryHandlers.length > 0) {
+      for (const beforeQueryHandler of this.beforeQueryHandlers) {
+        const newSql = beforeQueryHandler(sql);
+        if (newSql) {
+          sql = newSql;
+        }
       }
     }
     debug('query %o', sql);
-    let execDuration: number;
     const queryStart = Date.now();
+    let rows: any;
+    let lastError: Error | undefined;
     try {
-      const rows = await this._query(sql);
-      execDuration = Date.now() - queryStart;
-      if (this.afterQueryHandler) {
-        this.afterQueryHandler(sql, rows, execDuration);
-      }
+      rows = await this._query(sql);
       if (Array.isArray(rows)) {
         debug('query get %o rows', rows.length);
       } else {
@@ -79,13 +78,17 @@ export abstract class Operator {
       }
       return rows;
     } catch (err) {
-      execDuration = Date.now() - queryStart;
+      lastError = err;
       err.stack = `${err.stack}\n    sql: ${sql}`;
-      if (this.afterQueryHandler) {
-        this.afterQueryHandler(sql, null, execDuration, err);
-      }
       debug('query error: %o', err);
       throw err;
+    } finally {
+      if (this.afterQueryHandlers.length > 0) {
+        const execDuration = Date.now() - queryStart;
+        for (const afterQueryHandler of this.afterQueryHandlers) {
+          afterQueryHandler(sql, rows, execDuration, lastError);
+        }
+      }
     }
   }
 

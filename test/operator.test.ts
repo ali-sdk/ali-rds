@@ -95,22 +95,25 @@ describe('test/operator.test.ts', () => {
 
     it('should get query result on after hook', async () => {
       const op = new CustomOperator();
+      let called = false;
       op.afterQuery((sql, result, execDuration, err) => {
         assert.equal(sql, 'foo');
         assert.deepEqual(result, { sql });
         assert.equal(typeof execDuration, 'number');
         assert(execDuration >= 0);
         assert.equal(err, undefined);
+        called = true;
       });
       const result = await op.query('foo');
       assert.equal(result.sql, 'foo');
+      assert(called);
     });
 
     it('should get query error on after hook', async () => {
       const op = new CustomOperator();
       op.afterQuery((sql, result, execDuration, err) => {
         assert.equal(sql, 'error');
-        assert.equal(result, null);
+        assert.equal(result, undefined);
         assert.equal(typeof execDuration, 'number');
         assert(execDuration >= 0);
         assert(err instanceof Error);
