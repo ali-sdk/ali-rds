@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.2](https://github.com/ali-sdk/ali-rds/compare/v5.1.1...v5.1.2) (2023-03-06)
+
+
+### Bug Fixes
+
+* don't export protected methods ([#106](https://github.com/ali-sdk/ali-rds/issues/106)) ([b2757df](https://github.com/ali-sdk/ali-rds/commit/b2757dffdf76bb74e9fff8a89632d19704b03e4f))
+
 ## [5.1.1](https://github.com/ali-sdk/ali-rds/compare/v5.1.0...v5.1.1) (2023-03-05)
 
 
