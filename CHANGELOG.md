@@ -12,14 +12,14 @@
 
 ### Bug Fixes
 
-* support multi lifecricle hooks ([#105](https://github.com/ali-sdk/ali-rds/issues/105)) ([53b0a70](https://github.com/ali-sdk/ali-rds/commit/53b0a7058e4f3e583dc4610b1d1338014b9f2c15))
+* support multi lifecircle hooks ([#105](https://github.com/ali-sdk/ali-rds/issues/105)) ([53b0a70](https://github.com/ali-sdk/ali-rds/commit/53b0a7058e4f3e583dc4610b1d1338014b9f2c15))
 
 ## [5.1.0](https://github.com/ali-sdk/ali-rds/compare/v5.0.0...v5.1.0) (2023-03-05)
 
 
 ### Features
 
-* support custom query lifecricle ([#104](https://github.com/ali-sdk/ali-rds/issues/104)) ([5941c69](https://github.com/ali-sdk/ali-rds/commit/5941c69b461ad581aa88c211ee6c60a88d4f5420))
+* support custom query lifecircle ([#104](https://github.com/ali-sdk/ali-rds/issues/104)) ([5941c69](https://github.com/ali-sdk/ali-rds/commit/5941c69b461ad581aa88c211ee6c60a88d4f5420))
 
 ## [5.0.0](https://github.com/ali-sdk/ali-rds/compare/v4.1.0...v5.0.0) (2023-03-04)
 

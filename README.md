@@ -356,7 +356,7 @@ const rows = await db.query('SELECT * FROM your_table WHERE id=:id', { id: 123 }
 console.log(rows);
 ```
 
-### Custom query lifecricle
+### Custom query lifecircle
 
 ```ts
 db.beforeQuery((sql: string) => {

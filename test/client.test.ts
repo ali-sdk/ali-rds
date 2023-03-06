@@ -1204,7 +1204,7 @@ describe('test/client.test.ts', () => {
     });
   });
 
-  describe('query lifecricle work', () => {
+  describe('query lifecircle work', () => {
     it('should work on client and transactions', async () => {
       const db = new RDSClient(config);
       let count = 0;
