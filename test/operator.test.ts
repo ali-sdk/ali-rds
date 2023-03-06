@@ -6,7 +6,7 @@ class CustomOperator extends Operator {}
 describe('test/operator.test.ts', () => {
   describe('_where(where)', () => {
     it('should get where sql', () => {
-      const op = new CustomOperator();
+      const op: any = new CustomOperator();
       assert.equal(op._where(), '');
       assert.equal(op._where({}), '');
       assert.equal(op._where({ id: 1 }), ' WHERE `id` = 1');
