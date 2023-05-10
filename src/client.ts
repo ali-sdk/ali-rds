@@ -117,9 +117,9 @@ export class RDSClient extends Operator {
     ctx = ctx || {};
     if (!ctx._transactionConnection) {
       // Create only one conn if concurrent call `beginTransactionScope`
-      ctx._transactionConnection = this.beginTransaction();
+      ctx._transactionConnection = await this.beginTransaction();
     }
-    const tran = await ctx._transactionConnection;
+    const tran = ctx._transactionConnection;
 
     if (!ctx._transactionScopeCount) {
       ctx._transactionScopeCount = 1;
