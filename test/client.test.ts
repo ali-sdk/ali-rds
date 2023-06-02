@@ -1,9 +1,19 @@
+import { AsyncLocalStorage } from 'async_hooks';
 import { strict as assert } from 'node:assert';
-import { setTimeout } from 'node:timers/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import mm from 'mm';
+import { RDSTransaction } from '../src/transaction';
 import config from './config';
 import { RDSClient } from '../src/client';
+
+interface MockMateSpyObject<T extends (...args: any[]) => any> {
+  called?: number;
+  calledArguments?: Array<Parameters<T>>;
+  lastCalledArguments?: Parameters<T>;
+}
+
+const mmSpy = <T extends (...args: any[]) => any>(target: T) => target as MockMateSpyObject<T>;
 
 describe('test/client.test.ts', () => {
   const prefix = 'prefix-' + process.version + '-';
@@ -22,6 +32,10 @@ describe('test/client.test.ts', () => {
 
   after(async () => {
     return await db.end();
+  });
+
+  afterEach(() => {
+    mm.restore();
   });
 
   describe('new RDSClient(options)', () => {
@@ -336,6 +350,163 @@ describe('test/client.test.ts', () => {
       });
     });
 
+    it('should throw rollback error with cause error when rollback failed', async () => {
+      mm(RDSTransaction.prototype, 'rollback', async () => {
+        throw new Error('fake rollback error');
+      });
+      await assert.rejects(
+        db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
+        }),
+        (err: any) =>
+          err.message === 'fake rollback error' &&
+          err.cause.code === 'ER_PARSE_ERROR',
+      );
+    });
+
+    it('should rollback when query fail', async () => {
+      await assert.rejects(
+        db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com' ]);
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
+          return true;
+        }),
+        (err: any) => err.code === 'ER_PARSE_ERROR',
+      );
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginTransactionScope-fail.com' ]);
+      assert.equal(rows.length, 0);
+    });
+
+    it('should rollback all when query failed in nested scope', async () => {
+      mm.spy(RDSTransaction.prototype, 'rollback');
+
+      const inner = async () => {
+        return db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-nested-fail.com' ]);
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-nested-fail.com' ]);
+          return true;
+        });
+      };
+
+      const outter = async () => {
+        return await db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx3', 'm@beginTransactionScope-nested-fail.com' ]);
+          await inner();
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx4', 'm@beginTransactionScope-nested-fail.com' ]);
+          return true;
+        });
+      };
+
+      await assert.rejects(outter(), (err: any) => err.code === 'ER_PARSE_ERROR');
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.rollback).called, 1);
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, 'm@beginTransactionScope-nested-fail.com' ]);
+      assert.equal(rows.length, 0);
+    });
+
+    it('should not commit when catch query error in nested scope', async () => {
+      mm.spy(RDSTransaction.prototype, 'commit');
+      mm.spy(RDSTransaction.prototype, 'rollback');
+
+      const inner = async () => {
+        return await db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-catch-nested-error.com' ]);
+          return true;
+        });
+      };
+
+      const err = await db.beginTransactionScope(async conn => {
+        await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+        [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-catch-nested-error.com' ]);
+        return await inner().catch(err => err);
+      });
+
+      assert.strictEqual(err.code, 'ER_PARSE_ERROR');
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.rollback).called, 1);
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.commit).called, undefined);
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, 'm@beginTransactionScope-catch-nested-error.com' ]);
+      assert.equal(rows.length, 0);
+    });
+
+    it('should fail when query after catch nested error', async () => {
+      mm.spy(RDSTransaction.prototype, 'rollback');
+
+      const inner = async () => {
+        return await db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-query-catch-nested-error.com' ]);
+          return true;
+        });
+      };
+
+      await assert.rejects(
+        db.beginTransactionScope(async conn => {
+          await inner().catch(() => { /* ignore */ });
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-query-catch-nested-error.com' ]);
+        }),
+        (err: Error) => err.message === 'transaction was commit or rollback',
+      );
+
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.rollback).called, 1);
+    });
+
+    it('should partially success when query failed in parallel transaction', async () => {
+      const p1 = async () => {
+        return await db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx-partial1', 'm@beginTransactionScope-parallel-fail.com' ]);
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx-partial2', 'm@beginTransactionScope-parallel-fail.com' ]);
+          return true;
+        });
+      };
+
+      const p2 = async () => {
+        return db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-parallel-fail.com' ]);
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-parallel-fail.com' ]);
+          return true;
+        });
+      };
+
+      const [ p1Res, p2Res ] = await Promise.all([ p1(), p2().catch(err => err) ]);
+      assert.strictEqual(p1Res, true);
+      assert.strictEqual(p2Res.code, 'ER_PARSE_ERROR');
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, 'm@beginTransactionScope-parallel-fail.com' ]);
+      assert.equal(rows.length, 2);
+    });
+
     it('should insert 2 rows in a transaction', async () => {
       const result = await db.beginTransactionScope(async conn => {
         await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
@@ -354,170 +525,125 @@ describe('test/client.test.ts', () => {
       assert.equal(rows[1].name, prefix + 'beginTransactionScope2');
     });
 
-    it('should rollback when query fail', async () => {
-      try {
-        await db.beginTransactionScope(async conn => {
+    it('should insert 4 rows in nested and parallel scopes', async () => {
+      mm.spy(RDSTransaction.prototype, 'commit');
+      const nestedNestedScope = async () => {
+        return await db.beginTransactionScope(async conn => {
           await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-            values(?, ?, now(), now())`,
-          [ table, prefix + 'beginTransactionScope-fail1', 'm@beginTransactionScope-fail.com' ]);
-          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-            valuefail(?, ?, now(), now())`,
-          [ table, prefix + 'beginTransactionScope-fail12', 'm@beginTransactionScope-fail.com' ]);
-          return true;
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScope-success.com' ]);
+          return conn;
         });
-        throw new Error('should not run this');
-      } catch (err) {
-        assert.equal(err.code, 'ER_PARSE_ERROR');
-      }
+      };
+
+      const nestedScope = async () => {
+        return await db.beginTransactionScope(async conn => {
+          const nested = await nestedNestedScope();
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScope-success.com' ]);
+          return [ conn, nested ];
+        });
+      };
+
+      const scope = async () => {
+        return await db.beginTransactionScope(async conn => {
+          const nested = await nestedScope();
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScope-success.com' ]);
+          return [ conn, ...nested ];
+        });
+      };
+
+      const parallelScope = async () => {
+        return await db.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScope-success.com' ]);
+          return conn;
+        });
+      };
+
+      const [[ conn1, conn2, conn3 ], conn4 ] = await Promise.all([ scope(), parallelScope() ]);
+      assert.strictEqual(conn1, conn2);
+      assert.strictEqual(conn2, conn3);
+      assert.notStrictEqual(conn1, conn4);
 
       const rows = await db.query('select * from ?? where email=? order by id',
-        [ table, prefix + 'm@beginTransactionScope-fail.com' ]);
-      assert.equal(rows.length, 0);
+        [ table, prefix + 'm@beginTransactionScope-success.com' ]);
+      assert.equal(rows.length, 4);
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.commit).called, 2);
     });
 
-    describe('beginTransactionScope(fn, ctx)', () => {
-      it('should insert 7 rows in a transaction with ctx', async () => {
-        const ctx = {} as any;
-        async function hiInsert() {
-          return await db.beginTransactionScope(async conn => {
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScopeCtx3', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScopeCtx4', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
+    it('should multiple instances works', async () => {
+      mm.spy(RDSTransaction.prototype, 'commit');
+      const db2 = new RDSClient(config);
 
-        async function fooInsert() {
-          return await db.beginTransactionScope(async conn => {
-            await hiInsert();
-
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScopeCtx5', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScopeCtx6', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
-
-        async function barInsert() {
-          return await db.beginTransactionScope(async conn => {
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScopeCtx7', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-            return true;
-          }, ctx);
-        }
-
-        const result = await db.beginTransactionScope(async conn => {
+      const [ conn1, conn2 ] = await Promise.all([
+        db.beginTransactionScope(async conn => {
           await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
             values(?, ?, now(), now())`,
-          [ table, prefix + 'beginTransactionScopeCtx1', prefix + 'm@beginTransactionScopeCtx1.com' ]);
+          [ table, prefix + 'multiple-instance1', prefix + 'm@multiple-instance.com' ]);
+          return conn;
+        }),
+        db2.beginTransactionScope(async conn => {
           await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
             values(?, ?, now(), now())`,
-          [ table, prefix + 'beginTransactionScopeCtx2', prefix + 'm@beginTransactionScopeCtx1.com' ]);
-
-          // test query one
-          const row = await conn.queryOne('select * from ?? where name=?',
-            [ table, prefix + 'beginTransactionScopeCtx1' ]);
-          assert(row);
-          assert.equal(row.name, prefix + 'beginTransactionScopeCtx1');
-
-          const fooResult = await fooInsert();
-          assert.equal(fooResult, true);
-          const barResult = await barInsert();
-          assert.equal(barResult, true);
-
-          return true;
-        }, ctx);
-
-        assert.equal(result, true);
-
-        const rows = await db.query('select * from ?? where email=? order by id',
-          [ table, prefix + 'm@beginTransactionScopeCtx1.com' ]);
-        assert.equal(rows.length, 7);
-        assert.equal(rows[0].name, prefix + 'beginTransactionScopeCtx1');
-        assert.equal(rows[1].name, prefix + 'beginTransactionScopeCtx2');
-        assert.equal(rows[2].name, prefix + 'beginTransactionScopeCtx3');
-        assert.equal(rows[3].name, prefix + 'beginTransactionScopeCtx4');
-        assert.equal(rows[4].name, prefix + 'beginTransactionScopeCtx5');
-        assert.equal(rows[5].name, prefix + 'beginTransactionScopeCtx6');
-        assert.equal(rows[6].name, prefix + 'beginTransactionScopeCtx7');
-        assert.equal(ctx._transactionConnection, null);
-        assert.equal(ctx._transactionScopeCount, 0);
-      });
-
-      it('should auto rollback on fail', async () => {
-        const ctx = {} as any;
-        async function fooInsert() {
-          return await db.beginTransactionScope(async conn => {
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            return true;
-          }, ctx);
-        }
-
-        async function barInsert() {
-          return await db.beginTransactionScope(async conn => {
-            await fooInsert();
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScope-ctx-fail3', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            return true;
-          }, ctx);
-        }
-
-        try {
-          await db.beginTransactionScope(async conn => {
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScope-ctx-fail1', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-            await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
-              values(?, ?, now(), now())`,
-            [ table, prefix + 'beginTransactionScope-ctx-fail2', prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-
-            await barInsert();
-            throw new Error('should not run this');
-          }, ctx);
-        } catch (err) {
-          assert.equal(err.code, 'ER_DUP_ENTRY');
-        }
-
-        const rows = await db.query('select * from ?? where email=? order by id',
-          [ table, prefix + 'm@beginTransactionScope-ctx-fail1.com' ]);
-        assert.equal(rows.length, 0);
-        assert.equal(ctx._transactionConnection, null);
-        assert.equal(ctx._transactionScopeCount, 3);
-      });
-    });
-
-    it('should safe with await Array', async () => {
-      const ctx = {};
-      await Promise.all([
-        await db.beginTransactionScope(async conn => {
-          await conn.query(
-            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
-            [ prefix + 'should-safe-with-yield-array-1', prefix + 'm@should-safe-with-yield-array-1.com' ]);
-          await setTimeout(100);
-        }, ctx),
-        await db.beginTransactionScope(async conn => {
-          await conn.query(
-            'INSERT INTO `ali-sdk-test-user` (name, email, mobile) values(?, ?, "12345678901")',
-            [ prefix + 'should-safe-with-yield-array-2', prefix + 'm@should-safe-with-yield-array-1.com' ]);
-          await setTimeout(200);
-        }, ctx),
+          [ table, prefix + 'multiple-instance2', prefix + 'm@multiple-instance.com' ]);
+          return conn;
+        }),
       ]);
-      const rows = await db.query(
-        'SELECT * FROM `ali-sdk-test-user` where name like "%should-safe-with-yield-array%"');
-      assert(rows.length === 2);
+
+      assert.notStrictEqual(conn1, conn2);
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.commit).called, 2);
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@multiple-instance.com' ]);
+      assert.equal(rows.length, 2);
+
+      await db2.end();
+    });
+
+    it('should multiple instances with the same asyncLocalStorage works', async () => {
+      mm.spy(RDSTransaction.prototype, 'commit');
+
+      const storage = new AsyncLocalStorage<any>();
+      const db1 = new RDSClient({
+        ...config,
+        connectionStorage: storage,
+        connectionStorageKey: 'datasource1',
+      });
+      const db2 = new RDSClient({
+        ...config,
+        connectionStorage: storage,
+        connectionStorageKey: 'datasource2',
+      });
+
+      const [ conn1, conn2 ] = await Promise.all([
+        db1.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'multiple-instance-als1', prefix + 'm@multiple-instance-als.com' ]);
+          return conn;
+        }),
+        db2.beginTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'multiple-instance-als2', prefix + 'm@multiple-instance-als.com' ]);
+          return conn;
+        }),
+      ]);
+
+      assert.notStrictEqual(conn1, conn2);
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.commit).called, 2);
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@multiple-instance-als.com' ]);
+      assert.equal(rows.length, 2);
+
+      await db1.end();
+      await db2.end();
     });
   });
 

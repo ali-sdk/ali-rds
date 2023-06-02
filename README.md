@@ -44,6 +44,10 @@ const db = new RDSClient({
   // before returning an error from getConnection.
   // If set to 0, there is no limit to the number of queued connection requests. (Default: 0)
   // queueLimit: 0,
+  // Set asyncLocalStorage manually for transaction
+  // connectionStorage: new AsyncLocalStorage(),
+  // If create multiple RDSClient instances with the same connectionStorage, use this key to distinguish between the instances
+  // connectionStorageKey: 'datasource',
 });
 ```
 
@@ -309,28 +313,17 @@ const result = await db.beginTransactionScope(async conn => {
 // if error throw on scope, will auto rollback
 ```
 
-#### Transaction on koa
-
-API: `async beginTransactionScope(scope, ctx)`
-
-Use koa's context to make sure only one active transaction on one ctx.
+In `Promise.all` case, Parallel beginTransactionScope will create isolated transactions.
 
 ```js
-async function foo(ctx, data1) {
-  return await db.beginTransactionScope(async conn => {
-    await conn.insert(table1, data1);
-    return { success: true };
-  }, ctx);
-}
-
-async function bar(ctx, data2) {
-  return await db.beginTransactionScope(async conn => {
-    // execute foo with the same transaction scope
-    await foo(ctx, { foo: 'bar' });
-    await conn.insert(table2, data2);
-    return { success: true };
-  }, ctx);
-}
+const result = await Promise.all([
+  db.beginTransactionScope(async conn => {
+    // commit and success
+  }),
+  db.beginTransactionScope(async conn => {
+    // throw err and rollback
+  }),
+])
 ```
 
 ### Raw Queries

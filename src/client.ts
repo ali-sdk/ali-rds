@@ -1,7 +1,8 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { promisify } from 'node:util';
 import mysql from 'mysql';
-import type { PoolConfig, Pool } from 'mysql';
-import type { PoolConnectionPromisify } from './types';
+import type { Pool } from 'mysql';
+import type { PoolConnectionPromisify, RDSClientOptions, TransactionContext, TransactionScope } from './types';
 import { Operator } from './operator';
 import { RDSConnection } from './connection';
 import { RDSTransaction } from './transaction';
@@ -24,10 +25,17 @@ export class RDSClient extends Operator {
   static get format() { return mysql.format; }
   static get raw() { return mysql.raw; }
 
+  static #DEFAULT_STORAGE_KEY = Symbol.for('RDSClient#storage#default');
+  static #TRANSACTION_NEST_COUNT = Symbol.for('RDSClient#transaction#nestCount');
+
   #pool: PoolPromisify;
-  constructor(options: PoolConfig) {
+  #connectionStorage: AsyncLocalStorage<TransactionContext>;
+  #connectionStorageKey: string | symbol;
+
+  constructor(options: RDSClientOptions) {
     super();
-    this.#pool = mysql.createPool(options) as unknown as PoolPromisify;
+    const { connectionStorage, connectionStorageKey, ...mysqlOptions } = options;
+    this.#pool = mysql.createPool(mysqlOptions) as unknown as PoolPromisify;
     [
       'query',
       'getConnection',
@@ -35,6 +43,8 @@ export class RDSClient extends Operator {
     ].forEach(method => {
       this.#pool[method] = promisify(this.#pool[method]);
     });
+    this.#connectionStorage = connectionStorage || new AsyncLocalStorage();
+    this.#connectionStorageKey = connectionStorageKey || RDSClient.#DEFAULT_STORAGE_KEY;
   }
 
   // impl Operator._query
@@ -92,6 +102,7 @@ export class RDSClient extends Operator {
       throw err;
     }
     const tran = new RDSTransaction(conn);
+    tran[RDSClient.#TRANSACTION_NEST_COUNT] = 1;
     if (this.beforeQueryHandlers.length > 0) {
       for (const handler of this.beforeQueryHandlers) {
         tran.beforeQuery(handler);
@@ -109,62 +120,106 @@ export class RDSClient extends Operator {
    * Auto commit or rollback on a transaction scope
    *
    * @param {Function} scope - scope with code
-   * @param {Object} [ctx] - transaction env context, like koa's ctx.
-   *   To make sure only one active transaction on this ctx.
+   * @param {Object} [ctx] - transaction context
    * @return {Object} - scope return result
    */
-  async beginTransactionScope(scope: (transaction: RDSTransaction) => Promise<any>, ctx?: any): Promise<any> {
-    ctx = ctx || {};
-    if (!ctx._transactionConnection) {
-      // Create only one conn if concurrent call `beginTransactionScope`
-      ctx._transactionConnection = this.beginTransaction();
-    }
-    const tran = await ctx._transactionConnection;
-
-    if (!ctx._transactionScopeCount) {
-      ctx._transactionScopeCount = 1;
+  async #beginTransactionScope(scope: TransactionScope, ctx: TransactionContext): Promise<any> {
+    let tran: RDSTransaction;
+    let shouldRelease = false;
+    if (!ctx[this.#connectionStorageKey]) {
+      // there is no transaction in ctx, create a new one
+      tran = await this.beginTransaction();
+      ctx[this.#connectionStorageKey] = tran;
+      shouldRelease = true;
     } else {
-      ctx._transactionScopeCount++;
+      // use transaction in ctx
+      tran = ctx[this.#connectionStorageKey]!;
+      tran[RDSClient.#TRANSACTION_NEST_COUNT]++;
     }
+
+    let result: any;
+    let scopeError: any;
+    let internalError: any;
     try {
-      const result = await scope(tran);
-      ctx._transactionScopeCount--;
-      if (ctx._transactionScopeCount === 0) {
-        ctx._transactionConnection = null;
-        await tran.commit();
-      }
-      return result;
-    } catch (err) {
-      if (ctx._transactionConnection) {
-        ctx._transactionConnection = null;
-        await tran.rollback();
-      }
-      throw err;
+      result = await scope(tran);
+    } catch (err: any) {
+      scopeError = err;
     }
+    tran[RDSClient.#TRANSACTION_NEST_COUNT]--;
+
+    // null connection means the nested scope has been rollback, we can do nothing here
+    if (tran.conn) {
+      try {
+        // execution error, should rollback
+        if (scopeError) {
+          await tran.rollback();
+        } else if (tran[RDSClient.#TRANSACTION_NEST_COUNT] < 1) {
+          // nestedCount smaller than 1 means all the nested scopes have executed successfully
+          await tran.commit();
+        }
+      } catch (err) {
+        internalError = err;
+      }
+    }
+
+    // remove transaction in ctx
+    if (shouldRelease && tran[RDSClient.#TRANSACTION_NEST_COUNT] < 1) {
+      ctx[this.#connectionStorageKey] = null;
+    }
+
+    if (internalError) {
+      if (scopeError) {
+        internalError.cause = scopeError;
+      }
+      throw internalError;
+    }
+    if (scopeError) {
+      throw scopeError;
+    }
+    return result;
+  }
+
+  /**
+   * Auto commit or rollback on a transaction scope
+   *
+   * @param scope - scope with code
+   * @return {Object} - scope return result
+   */
+  async beginTransactionScope(scope: TransactionScope) {
+    let ctx = this.#connectionStorage.getStore();
+    if (ctx) {
+      return await this.#beginTransactionScope(scope, ctx);
+    }
+    ctx = {};
+    return await this.#connectionStorage.run(ctx, async () => {
+      return await this.#beginTransactionScope(scope, ctx!);
+    });
   }
 
   /**
    * doomed to be rollbacked after transaction scope
    * useful on writing tests which are related with database
    *
-   * @param {Function} scope - scope with code
-   * @param {Object} [ctx] - transaction env context, like koa's ctx.
-   *   To make sure only one active transaction on this ctx.
+   * @param scope - scope with code
+   * @param ctx - transaction context
    * @return {Object} - scope return result
    */
-  async beginDoomedTransactionScope(scope: (transaction: RDSTransaction) => Promise<any>, ctx?: any): Promise<any> {
-    ctx = ctx || {};
-    if (!ctx._transactionConnection) {
-      ctx._transactionConnection = await this.beginTransaction();
-      ctx._transactionScopeCount = 1;
+  async #beginDoomedTransactionScope(scope: TransactionScope, ctx: TransactionContext): Promise<any> {
+    let tran: RDSTransaction;
+    if (!ctx[this.#connectionStorageKey]) {
+      // there is no transaction in ctx, create a new one
+      tran = await this.beginTransaction();
+      ctx[this.#connectionStorageKey] = tran;
     } else {
-      ctx._transactionScopeCount++;
+      // use transaction in ctx
+      tran = ctx[this.#connectionStorageKey]!;
+      tran[RDSClient.#TRANSACTION_NEST_COUNT]++;
     }
-    const tran = ctx._transactionConnection;
+
     try {
       const result = await scope(tran);
-      ctx._transactionScopeCount--;
-      if (ctx._transactionScopeCount === 0) {
+      tran[RDSClient.#TRANSACTION_NEST_COUNT]--;
+      if (tran[RDSClient.#TRANSACTION_NEST_COUNT] === 0) {
         ctx._transactionConnection = null;
       }
       return result;
@@ -176,6 +231,24 @@ export class RDSClient extends Operator {
     } finally {
       await tran.rollback();
     }
+  }
+
+  /**
+   * doomed to be rollbacked after transaction scope
+   * useful on writing tests which are related with database
+   *
+   * @param scope - scope with code
+   * @return {Object} - scope return result
+   */
+  async beginDoomedTransactionScope(scope: TransactionScope): Promise<any> {
+    let ctx = this.#connectionStorage.getStore();
+    if (ctx) {
+      return await this.#beginDoomedTransactionScope(scope, ctx);
+    }
+    ctx = {};
+    return await this.#connectionStorage.run(ctx, async () => {
+      return await this.#beginDoomedTransactionScope(scope, ctx!);
+    });
   }
 
   async end() {
