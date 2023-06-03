@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.0.0](https://github.com/ali-sdk/ali-rds/compare/v5.1.2...v6.0.0) (2023-06-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* In `Promise.all` case, Parallel beginTransactionScope will create isolated transactions.
+
+### Features
+
+* use AsyncLocalStorage to refactor transaction, to make it more safe ([#108](https://github.com/ali-sdk/ali-rds/issues/108)) ([ae327fa](https://github.com/ali-sdk/ali-rds/commit/ae327fa5a350b48c4e1f56c2769524c5786e1152))
+
+
+### Bug Fixes
+
+* use master branch ([758877d](https://github.com/ali-sdk/ali-rds/commit/758877d9e01df74b9df12c65b7f625275996656b))
+
 ## [5.1.2](https://github.com/ali-sdk/ali-rds/compare/v5.1.1...v5.1.2) (2023-03-06)
 
 
