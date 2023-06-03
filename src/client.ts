@@ -25,8 +25,8 @@ export class RDSClient extends Operator {
   static get format() { return mysql.format; }
   static get raw() { return mysql.raw; }
 
-  static #DEFAULT_STORAGE_KEY = Symbol.for('RDSClient#storage#default');
-  static #TRANSACTION_NEST_COUNT = Symbol.for('RDSClient#transaction#nestCount');
+  static #DEFAULT_STORAGE_KEY = Symbol('RDSClient#storage#default');
+  static #TRANSACTION_NEST_COUNT = Symbol('RDSClient#transaction#nestCount');
 
   #pool: PoolPromisify;
   #connectionStorage: AsyncLocalStorage<TransactionContext>;
@@ -220,16 +220,16 @@ export class RDSClient extends Operator {
       const result = await scope(tran);
       tran[RDSClient.#TRANSACTION_NEST_COUNT]--;
       if (tran[RDSClient.#TRANSACTION_NEST_COUNT] === 0) {
-        ctx._transactionConnection = null;
+        ctx[this.#connectionStorageKey] = null;
+        await tran.rollback();
       }
       return result;
     } catch (err) {
-      if (ctx._transactionConnection) {
-        ctx._transactionConnection = null;
+      if (ctx[this.#connectionStorageKey]) {
+        ctx[this.#connectionStorageKey] = null;
+        await tran.rollback();
       }
       throw err;
-    } finally {
-      await tran.rollback();
     }
   }
 

@@ -647,6 +647,62 @@ describe('test/client.test.ts', () => {
     });
   });
 
+  describe('beginDoomedTransactionScope(scope)', () => {
+    it('should rollback when query success', async () => {
+      mm.spy(RDSTransaction.prototype, 'rollback');
+      const inner = async () => {
+        return await db.beginDoomedTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              values(?, ?, now(), now())`,
+          [ table, prefix + 'beginDoomedTransactionScopeCtx1', prefix + 'm@beginDoomedTransactionScope-success.com' ]);
+          return conn;
+        });
+      };
+
+      const [ conn, nestedConn ] = await db.beginDoomedTransactionScope(async conn => {
+        await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+        [ table, prefix + 'beginDoomedTransactionScopeCtx2', prefix + 'm@beginDoomedTransactionScope-success.com' ]);
+        const nestedConn = await inner();
+        return [ conn, nestedConn ];
+      });
+
+      assert.strictEqual(conn, nestedConn);
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.rollback).called, 1);
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginDoomedTransactionScope-success.com' ]);
+      assert.equal(rows.length, 0);
+    });
+
+    it('should rollback when query fail', async () => {
+      mm.spy(RDSTransaction.prototype, 'rollback');
+      const inner = async () => {
+        return await db.beginDoomedTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+              valuefail(?, ?, now(), now())`,
+          [ table, prefix + 'beginDoomedTransactionScopeCtx1', prefix + 'm@beginDoomedTransactionScope-fail.com' ]);
+        });
+      };
+
+      await assert.rejects(
+        db.beginDoomedTransactionScope(async conn => {
+          await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
+            values(?, ?, now(), now())`,
+          [ table, prefix + 'beginDoomedTransactionScopeCtx2', prefix + 'm@beginDoomedTransactionScope-fail.com' ]);
+          await inner();
+        }),
+        (err: any) => err.code === 'ER_PARSE_ERROR',
+      );
+
+      assert.strictEqual(mmSpy(RDSTransaction.prototype.rollback).called, 1);
+
+      const rows = await db.query('select * from ?? where email=? order by id',
+        [ table, prefix + 'm@beginDoomedTransactionScope-fail.com' ]);
+      assert.equal(rows.length, 0);
+    });
+  });
+
   describe('get(table, obj, options), select(table, options)', () => {
     before(async () => {
       let result = await db.insert(table, {
