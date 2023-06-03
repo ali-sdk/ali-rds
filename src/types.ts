@@ -1,4 +1,11 @@
-import type { PoolConnection } from 'mysql';
+import { AsyncLocalStorage } from 'async_hooks';
+import type { PoolConnection, PoolConfig } from 'mysql';
+import { RDSTransaction } from './transaction';
+
+export interface RDSClientOptions extends PoolConfig {
+  connectionStorageKey?: string;
+  connectionStorage?: AsyncLocalStorage<Record<PropertyKey, RDSTransaction>>;
+}
 
 export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {
   query(sql: string): Promise<any>;
@@ -53,3 +60,6 @@ export type LockTableOption = {
 
 export type BeforeQueryHandler = (sql: string) => string | undefined | void;
 export type AfterQueryHandler = (sql: string, result: any, execDuration: number, err?: Error) => void;
+
+export type TransactionContext = Record<PropertyKey, RDSTransaction | null>;
+export type TransactionScope = (transaction: RDSTransaction) => Promise<any>;
