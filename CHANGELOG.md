@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/ali-sdk/ali-rds/compare/v6.0.0...v6.0.1) (2023-06-05)
+
+
+### Bug Fixes
+
+* mysql type not found ([#109](https://github.com/ali-sdk/ali-rds/issues/109)) ([6a9bc45](https://github.com/ali-sdk/ali-rds/commit/6a9bc452a8a73f9d697ee0e55f91b823ef153df4))
+
 ## [6.0.0](https://github.com/ali-sdk/ali-rds/compare/v5.1.2...v6.0.0) (2023-06-03)
 
 
