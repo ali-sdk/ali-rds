@@ -44,7 +44,7 @@
     "mysql"
   ],
   "engines": {
-    "node": ">= 14.17.0"
+    "node": ">= 16.13.0"
   },
   "author": "fengmk2 <fengmk2@gmail.com> (https://github.com/fengmk2)",
   "license": "MIT"

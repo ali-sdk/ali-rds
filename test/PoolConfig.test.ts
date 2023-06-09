@@ -18,37 +18,19 @@ describe('test/PoolConfig.test.ts', () => {
   let end = false;
 
   before(async () => {
-    if (typeof diagnosticsChannel.subscribe === 'function') {
-      diagnosticsChannel.subscribe('ali-rds:connection:new', message => {
-        if (end) return;
-        const { connection } = message as ConnectionMessage;
-        console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
-        newConnectionCountByDiagnosticsChannel++;
-      });
-      diagnosticsChannel.subscribe('ali-rds:query:end', message => {
-        if (end) return;
-        const { connection, sql, error } = message as QueryEndMessage;
-        console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
-          connection.threadId, sql, error);
-        queryCount++;
-      });
-    } else {
-      // Node.js 14
-      diagnosticsChannel.channel('ali-rds:connection:new').subscribe(message => {
-        if (end) return;
-        const { connection } = message as ConnectionMessage;
-        console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
-        newConnectionCountByDiagnosticsChannel++;
-      });
-      diagnosticsChannel.channel('ali-rds:query:end').subscribe(message => {
-        if (end) return;
-        const { connection, sql, error } = message as QueryEndMessage;
-        if (!connection) return;
-        console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
-          connection.threadId, sql, error);
-        queryCount++;
-      });
-    }
+    diagnosticsChannel.subscribe('ali-rds:connection:new', message => {
+      if (end) return;
+      const { connection } = message as ConnectionMessage;
+      console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
+      newConnectionCountByDiagnosticsChannel++;
+    });
+    diagnosticsChannel.subscribe('ali-rds:query:end', message => {
+      if (end) return;
+      const { connection, sql, error } = message as QueryEndMessage;
+      console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
+        connection.threadId, sql, error);
+      queryCount++;
+    });
 
     db = new RDSClient({
       // test getConnectionConfig
