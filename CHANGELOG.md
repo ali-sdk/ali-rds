@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.0](https://github.com/ali-sdk/ali-rds/compare/v6.0.1...v6.1.0) (2023-06-09)
+
+
+### Features
+
+* dynamic retrieval of database connection configuration ([#110](https://github.com/ali-sdk/ali-rds/issues/110)) ([f437efb](https://github.com/ali-sdk/ali-rds/commit/f437efb439c1770561c1d4dc79318c632e7321d9))
+
 ## [6.0.1](https://github.com/ali-sdk/ali-rds/compare/v6.0.0...v6.0.1) (2023-06-05)
 
 
