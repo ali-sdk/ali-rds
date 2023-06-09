@@ -3,6 +3,7 @@
   "version": "6.1.0",
   "description": "Aliyun RDS client",
   "main": "lib/client.js",
+  "types": "lib/client.d.ts",
   "files": [
     "lib"
   ],

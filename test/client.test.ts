@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';

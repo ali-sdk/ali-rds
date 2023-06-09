@@ -1,9 +1,11 @@
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import diagnosticsChannel from 'node:diagnostics_channel';
 import mm from 'mm';
 import config from './config';
 import { RDSClient } from '../src/client';
+import type { ConnectionMessage, QueryEndMessage } from '../src/channels';
 
 describe('test/PoolConfig.test.ts', () => {
   const prefix = 'prefix-PoolConfig' + process.version + '-';
@@ -11,7 +13,43 @@ describe('test/PoolConfig.test.ts', () => {
   let db: RDSClient;
   let index = 0;
   let newConnectionCount = 0;
+  let newConnectionCountByDiagnosticsChannel = 0;
+  let queryCount = 0;
+  let end = false;
+
   before(async () => {
+    if (typeof diagnosticsChannel.subscribe === 'function') {
+      diagnosticsChannel.subscribe('ali-rds:connection:new', message => {
+        if (end) return;
+        const { connection } = message as ConnectionMessage;
+        console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
+        newConnectionCountByDiagnosticsChannel++;
+      });
+      diagnosticsChannel.subscribe('ali-rds:query:end', message => {
+        if (end) return;
+        const { connection, sql, error } = message as QueryEndMessage;
+        console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
+          connection.threadId, sql, error);
+        queryCount++;
+      });
+    } else {
+      // Node.js 14
+      diagnosticsChannel.channel('ali-rds:connection:new').subscribe(message => {
+        if (end) return;
+        const { connection } = message as ConnectionMessage;
+        console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
+        newConnectionCountByDiagnosticsChannel++;
+      });
+      diagnosticsChannel.channel('ali-rds:query:end').subscribe(message => {
+        if (end) return;
+        const { connection, sql, error } = message as QueryEndMessage;
+        if (!connection) return;
+        console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
+          connection.threadId, sql, error);
+        queryCount++;
+      });
+    }
+
     db = new RDSClient({
       // test getConnectionConfig
       connectionLimit: 2,
@@ -44,7 +82,9 @@ describe('test/PoolConfig.test.ts', () => {
   });
 
   after(async () => {
-    return await db.end();
+    await db.end();
+    assert.equal(queryCount, 6);
+    end = true;
   });
 
   afterEach(() => {
@@ -79,6 +119,7 @@ describe('test/PoolConfig.test.ts', () => {
       assert(Array.isArray(results[2]));
       assert.equal(index, 3);
       assert.equal(newConnectionCount, 2);
+      assert.equal(newConnectionCountByDiagnosticsChannel, 2);
     });
   });
 });
