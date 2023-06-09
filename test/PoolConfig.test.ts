@@ -109,6 +109,7 @@ describe('test/PoolConfig.test.ts', () => {
     });
 
     it('should query error', async () => {
+      assert.equal(queryErrorCount, 0);
       await assert.rejects(async () => {
         await db.query('show tables wrong sql');
       }, (err: Error) => {
