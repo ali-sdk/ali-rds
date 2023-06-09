@@ -172,6 +172,7 @@ describe('test/client.test.ts', () => {
     it('should beginTransaction error', async () => {
       const failDB = new RDSClient({
         port: 12312,
+        host: '127.0.0.1',
       });
       await assert.rejects(async () => {
         await failDB.beginTransaction();
@@ -339,6 +340,7 @@ describe('test/client.test.ts', () => {
     it('should beginTransactionScope() error', async () => {
       const failDB = new RDSClient({
         port: 12312,
+        host: '127.0.0.1',
       });
       await assert.rejects(async () => {
         await failDB.beginTransactionScope(async () => {
@@ -1321,6 +1323,7 @@ describe('test/client.test.ts', () => {
     it('should throw error when mysql connect fail', async () => {
       const db = new RDSClient({
         port: 33061,
+        host: '127.0.0.1',
       });
       try {
         await db.getConnection();

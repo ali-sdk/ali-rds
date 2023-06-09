@@ -1,10 +1,13 @@
 import { AsyncLocalStorage } from 'async_hooks';
-import type { PoolConnection, PoolConfig } from 'mysql';
+import type { PoolConnection, PoolConfig, ConnectionConfig } from 'mysql';
 import { RDSTransaction } from './transaction';
+
+export type GetConnectionConfig = () => ConnectionConfig;
 
 export interface RDSClientOptions extends PoolConfig {
   connectionStorageKey?: string;
   connectionStorage?: AsyncLocalStorage<Record<PropertyKey, RDSTransaction>>;
+  getConnectionConfig?: GetConnectionConfig
 }
 
 export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {

@@ -6,6 +6,7 @@ import type { PoolConnectionPromisify, RDSClientOptions, TransactionContext, Tra
 import { Operator } from './operator';
 import { RDSConnection } from './connection';
 import { RDSTransaction } from './transaction';
+import { RDSPoolConfig } from './PoolConfig';
 import literals from './literals';
 
 interface PoolPromisify extends Omit<Pool, 'query'> {
@@ -35,7 +36,18 @@ export class RDSClient extends Operator {
   constructor(options: RDSClientOptions) {
     super();
     const { connectionStorage, connectionStorageKey, ...mysqlOptions } = options;
-    this.#pool = mysql.createPool(mysqlOptions) as unknown as PoolPromisify;
+    // get connection options from getConnectionConfig method every time
+    if (mysqlOptions.getConnectionConfig) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const Pool = require('mysql/lib/Pool');
+      this.#pool = new Pool({
+        config: new RDSPoolConfig(mysqlOptions, mysqlOptions.getConnectionConfig),
+      });
+      // override _needsChangeUser to return false
+      (this.#pool as any)._needsChangeUser = () => false;
+    } else {
+      this.#pool = mysql.createPool(mysqlOptions) as unknown as PoolPromisify;
+    }
     [
       'query',
       'getConnection',
