@@ -15,6 +15,7 @@ describe('test/PoolConfig.test.ts', () => {
   let newConnectionCount = 0;
   let newConnectionCountByDiagnosticsChannel = 0;
   let queryCount = 0;
+  let queryErrorCount = 0;
   let end = false;
 
   before(async () => {
@@ -30,6 +31,9 @@ describe('test/PoolConfig.test.ts', () => {
       console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
         connection.threadId, sql, error);
       queryCount++;
+      if (error) {
+        queryErrorCount++;
+      }
     });
 
     db = new RDSClient({
@@ -65,7 +69,7 @@ describe('test/PoolConfig.test.ts', () => {
 
   after(async () => {
     await db.end();
-    assert.equal(queryCount, 6);
+    assert.equal(queryCount, 7);
     end = true;
   });
 
@@ -102,6 +106,16 @@ describe('test/PoolConfig.test.ts', () => {
       assert.equal(index, 3);
       assert.equal(newConnectionCount, 2);
       assert.equal(newConnectionCountByDiagnosticsChannel, 2);
+    });
+
+    it('should query error', async () => {
+      await assert.rejects(async () => {
+        await db.query('show tables wrong sql');
+      }, (err: Error) => {
+        assert.match(err.message, /You have an error in your SQL syntax/);
+        return true;
+      });
+      assert.equal(queryErrorCount, 1);
     });
   });
 });
