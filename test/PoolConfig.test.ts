@@ -10,15 +10,30 @@ describe('test/PoolConfig.test.ts', () => {
   const table = 'ali-sdk-test-user';
   let db: RDSClient;
   let index = 0;
+  let newConnectionCount = 0;
   before(async () => {
     db = new RDSClient({
-      // test getConnectionConfig only once
-      connectionLimit: 1,
+      // test getConnectionConfig
+      connectionLimit: 2,
       getConnectionConfig() {
         console.log('get connection config index: %d', ++index);
         return config;
       },
     });
+    db.pool.on('acquire', conn => {
+      console.log('acquire connection %o', conn.threadId);
+    });
+    db.pool.on('connection', conn => {
+      newConnectionCount++;
+      console.log('new connection %o', conn.threadId);
+    });
+    db.pool.on('enqueue', () => {
+      console.log('Waiting for available connection slot');
+    });
+    db.pool.on('release', conn => {
+      console.log('release connection %o', conn.threadId);
+    });
+
     try {
       const sql = await fs.readFile(path.join(__dirname, 'rds_init.sql'), 'utf-8');
       await db.query(sql);
@@ -45,15 +60,25 @@ describe('test/PoolConfig.test.ts', () => {
     });
 
     it('should connect rds success', async () => {
-      let rows = await db.query('show tables');
-      // console.log(rows);
-      assert(rows);
-      assert(Array.isArray(rows));
-      rows = await db.query('show tables');
+      const rows = await db.query('show tables');
       // console.log(rows);
       assert(rows);
       assert(Array.isArray(rows));
       assert.equal(index, 2);
+      const results = await Promise.all([
+        db.query('show tables'),
+        db.query('show tables'),
+        db.query('show tables'),
+      ]);
+      assert.equal(results.length, 3);
+      assert(results[0]);
+      assert(Array.isArray(results[0]));
+      assert(results[1]);
+      assert(Array.isArray(results[1]));
+      assert(results[2]);
+      assert(Array.isArray(results[2]));
+      assert.equal(index, 3);
+      assert.equal(newConnectionCount, 2);
     });
   });
 });
