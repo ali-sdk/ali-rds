@@ -6,7 +6,7 @@ export class RDSTransaction extends Operator {
   isRollback = false;
   conn: RDSConnection | null;
   constructor(conn: RDSConnection) {
-    super();
+    super(conn.conn);
     this.conn = conn;
   }
 

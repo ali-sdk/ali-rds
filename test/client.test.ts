@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -1315,6 +1315,8 @@ describe('test/client.test.ts', () => {
       assert(result.insertId > 0);
       result = await conn.delete(table);
       assert(result.affectedRows > 0);
+      assert.equal(typeof conn.threadId, 'number');
+      assert(conn.threadId! > 0);
       conn.release();
     });
   });
@@ -1417,6 +1419,9 @@ describe('test/client.test.ts', () => {
       assert.equal(count, 1);
 
       await db.beginTransactionScope(async conn => {
+        assert.equal(typeof conn.threadId, 'number');
+        assert(conn.threadId! > 0);
+        assert.equal(conn.threadId, conn.conn!.threadId);
         await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);

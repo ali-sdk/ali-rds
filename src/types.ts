@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { PoolConnection, PoolConfig, ConnectionConfig } from 'mysql';
 import { RDSTransaction } from './transaction';
 

@@ -8,7 +8,10 @@ import {
   LockResult, LockTableOption,
   SelectOption,
   UpdateOption, UpdateResult, UpdateRow,
+  PoolConnectionPromisify,
 } from './types';
+import channels from './channels';
+import type { QueryStartMessage, QueryEndMessage } from './channels';
 
 const debug = debuglog('ali-rds:operator');
 
@@ -16,10 +19,21 @@ const debug = debuglog('ali-rds:operator');
  * Operator Interface
  */
 export abstract class Operator {
+  #connection: PoolConnectionPromisify;
+  constructor(connection?: PoolConnectionPromisify) {
+    if (connection) {
+      this.#connection = connection;
+    }
+  }
+
   protected beforeQueryHandlers: BeforeQueryHandler[] = [];
   protected afterQueryHandlers: AfterQueryHandler[] = [];
 
   get literals() { return literals; }
+
+  get threadId() {
+    return this.#connection?.threadId;
+  }
 
   beforeQuery(beforeQueryHandler: BeforeQueryHandler) {
     this.beforeQueryHandlers.push(beforeQueryHandler);
@@ -66,9 +80,13 @@ export abstract class Operator {
       }
     }
     debug('query %o', sql);
-    const queryStart = Date.now();
+    const queryStart = performance.now();
     let rows: any;
     let lastError: Error | undefined;
+    channels.queryStart.publish({
+      sql,
+      connection: this.#connection,
+    } as QueryStartMessage);
     try {
       rows = await this._query(sql);
       if (Array.isArray(rows)) {
@@ -83,10 +101,16 @@ export abstract class Operator {
       debug('query error: %o', err);
       throw err;
     } finally {
+      const duration = Math.floor((performance.now() - queryStart) * 1000) / 1000;
+      channels.queryEnd.publish({
+        sql,
+        connection: this.#connection,
+        duration,
+        error: lastError,
+      } as QueryEndMessage);
       if (this.afterQueryHandlers.length > 0) {
-        const execDuration = Date.now() - queryStart;
         for (const afterQueryHandler of this.afterQueryHandlers) {
-          afterQueryHandler(sql, rows, execDuration, lastError);
+          afterQueryHandler(sql, rows, duration, lastError);
         }
       }
     }

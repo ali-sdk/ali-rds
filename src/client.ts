@@ -8,6 +8,8 @@ import { RDSConnection } from './connection';
 import { RDSTransaction } from './transaction';
 import { RDSPoolConfig } from './PoolConfig';
 import literals from './literals';
+import channels from './channels';
+import type { ConnectionMessage, ConnectionEnqueueMessage } from './channels';
 
 interface PoolPromisify extends Omit<Pool, 'query'> {
   query(sql: string): Promise<any>;
@@ -39,8 +41,8 @@ export class RDSClient extends Operator {
     // get connection options from getConnectionConfig method every time
     if (mysqlOptions.getConnectionConfig) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const Pool = require('mysql/lib/Pool');
-      this.#pool = new Pool({
+      const MySQLPool = require('mysql/lib/Pool');
+      this.#pool = new MySQLPool({
         config: new RDSPoolConfig(mysqlOptions, mysqlOptions.getConnectionConfig),
       });
       // override _needsChangeUser to return false
@@ -57,11 +59,39 @@ export class RDSClient extends Operator {
     });
     this.#connectionStorage = connectionStorage || new AsyncLocalStorage();
     this.#connectionStorageKey = connectionStorageKey || RDSClient.#DEFAULT_STORAGE_KEY;
+    // https://github.com/mysqljs/mysql#pool-events
+    this.#pool.on('connection', (connection: PoolConnectionPromisify) => {
+      channels.connectionNew.publish({
+        client: this,
+        connection,
+      } as ConnectionMessage);
+    });
+    this.#pool.on('enqueue', () => {
+      channels.connectionEnqueue.publish({
+        client: this,
+      } as ConnectionEnqueueMessage);
+    });
+    this.#pool.on('acquire', (connection: PoolConnectionPromisify) => {
+      channels.connectionAcquire.publish({
+        client: this,
+        connection,
+      } as ConnectionMessage);
+    });
+    this.#pool.on('release', (connection: PoolConnectionPromisify) => {
+      channels.connectionRelease.publish({
+        client: this,
+        connection,
+      } as ConnectionMessage);
+    });
   }
 
-  // impl Operator._query
-  protected async _query(sql: string) {
-    return await this.#pool.query(sql);
+  async query<T = any>(sql: string, values?: object | any[]): Promise<T> {
+    const conn = await this.getConnection();
+    try {
+      return await conn.query(sql, values);
+    } finally {
+      conn.release();
+    }
   }
 
   get pool() {
@@ -197,7 +227,7 @@ export class RDSClient extends Operator {
    * @param scope - scope with code
    * @return {Object} - scope return result
    */
-  async beginTransactionScope(scope: TransactionScope) {
+  async beginTransactionScope(scope: TransactionScope): Promise<any> {
     let ctx = this.#connectionStorage.getStore();
     if (ctx) {
       return await this.#beginTransactionScope(scope, ctx);

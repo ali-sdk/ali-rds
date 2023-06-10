@@ -7,7 +7,7 @@ const kWrapToRDS = Symbol('kWrapToRDS');
 export class RDSConnection extends Operator {
   conn: PoolConnectionPromisify;
   constructor(conn: PoolConnectionPromisify) {
-    super();
+    super(conn);
     this.conn = conn;
     if (!this.conn[kWrapToRDS]) {
       [
