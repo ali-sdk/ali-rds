@@ -1315,6 +1315,8 @@ describe('test/client.test.ts', () => {
       assert(result.insertId > 0);
       result = await conn.delete(table);
       assert(result.affectedRows > 0);
+      assert.equal(typeof conn.threadId, 'number');
+      assert(conn.threadId! > 0);
       conn.release();
     });
   });

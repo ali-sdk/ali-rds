@@ -24,6 +24,13 @@ describe('test/operator.test.ts', () => {
     });
   });
 
+  describe('get threadId()', () => {
+    it('should get return undefined when connection not exists', () => {
+      const op = new CustomOperator();
+      assert.equal(op.threadId, undefined);
+    });
+  });
+
   describe('format()', () => {
     it('should get literal string', () => {
       const op = new CustomOperator();
