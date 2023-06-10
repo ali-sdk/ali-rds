@@ -1419,6 +1419,9 @@ describe('test/client.test.ts', () => {
       assert.equal(count, 1);
 
       await db.beginTransactionScope(async conn => {
+        assert.equal(typeof conn.threadId, 'number');
+        assert(conn.threadId! > 0);
+        assert.equal(conn.threadId, conn.conn!.threadId);
         await conn.query(`insert into ??(name, email, gmt_create, gmt_modified)
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
