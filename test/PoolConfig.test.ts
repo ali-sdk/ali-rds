@@ -27,9 +27,9 @@ describe('test/PoolConfig.test.ts', () => {
     });
     diagnosticsChannel.subscribe('ali-rds:query:end', message => {
       if (end) return;
-      const { connection, sql, error } = message as QueryEndMessage;
-      console.log('[diagnosticsChannel] connection threadId %o query %o, error: %o',
-        connection.threadId, sql, error);
+      const { connection, sql, duration, error } = message as QueryEndMessage;
+      console.log('[diagnosticsChannel] connection threadId %o query %o, duration: %oms, error: %o',
+        connection.threadId, sql, duration, error);
       queryCount++;
       if (error) {
         queryErrorCount++;

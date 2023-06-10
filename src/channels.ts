@@ -30,5 +30,6 @@ export interface QueryStartMessage {
 export interface QueryEndMessage {
   connection: PoolConnectionPromisify;
   sql: string;
+  duration: number;
   error?: Error;
 }
