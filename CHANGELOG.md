@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.0](https://github.com/ali-sdk/ali-rds/compare/v6.1.0...v6.2.0) (2023-06-10)
+
+
+### Features
+
+* export connection and query diagnostics_channel ([#111](https://github.com/ali-sdk/ali-rds/issues/111)) ([64aa75d](https://github.com/ali-sdk/ali-rds/commit/64aa75d121d63ddae4fa4bd2a6e097773f280dfe))
+
 ## [6.1.0](https://github.com/ali-sdk/ali-rds/compare/v6.0.1...v6.1.0) (2023-06-09)
 
 
