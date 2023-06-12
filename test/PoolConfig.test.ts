@@ -81,7 +81,7 @@ describe('test/PoolConfig.test.ts', () => {
     it('should get connection config from newConnectionConfig()', async () => {
       assert.equal(db.pool.config.connectionConfig.database, undefined);
       assert.equal(index, 1);
-      assert.equal((db.pool.config as any).newConnectionConfig().database, 'test');
+      assert.equal((db.pool.config as any).newConnectionConfig().database, config.database);
       assert.equal(index, 2);
     });
 

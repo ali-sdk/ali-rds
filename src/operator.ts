@@ -79,7 +79,7 @@ export abstract class Operator {
         }
       }
     }
-    debug('query %o', sql);
+    debug('[connection#%s] query %o', this.threadId, sql);
     const queryStart = performance.now();
     let rows: any;
     let lastError: Error | undefined;
@@ -90,15 +90,15 @@ export abstract class Operator {
     try {
       rows = await this._query(sql);
       if (Array.isArray(rows)) {
-        debug('query get %o rows', rows.length);
+        debug('[connection#%s] query get %o rows', this.threadId, rows.length);
       } else {
-        debug('query result: %o', rows);
+        debug('[connection#%s] query result: %o', this.threadId, rows);
       }
       return rows;
     } catch (err) {
       lastError = err;
       err.stack = `${err.stack}\n    sql: ${sql}`;
-      debug('query error: %o', err);
+      debug('[connection#%s] query error: %o', this.threadId, err);
       throw err;
     } finally {
       const duration = Math.floor((performance.now() - queryStart) * 1000) / 1000;
