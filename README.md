@@ -408,6 +408,24 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 const session = new db.literals.Literal('session()');
 ```
 
+## Class Relation
+
+```txt
++-----------+                          +----------------+
+| RDSClient +-- beginTransaction() --> + RDSTransaction |
++--+----+---+                          +----+----+------+
+   |    | getConnection()            .conn  |    |
+   |    |         +---------------+         |    |
+   |    +-------->+ RDSConnection +<--------+    |
+   |              +-------+-------+              |
+   |                      | extends              |
+   |                      v                      |
+   |   extends    +-------+-------+    extends   |
+   +------------->+   Operator    +<-------------+
+                  |    query()    |
+                  +---------------+
+```
+
 ## License
 
 [MIT](LICENSE)
