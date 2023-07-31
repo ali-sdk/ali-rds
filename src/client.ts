@@ -99,11 +99,17 @@ export class RDSClient extends Operator {
   }
 
   get stats() {
+    const acquiringConnections = this.#pool._acquiringConnections.length;
+    const allConnections = this.#pool._allConnections.length;
+    const freeConnections = this.#pool._freeConnections.length;
+    const connectionQueue = this.#pool._connectionQueue.length;
+    const busyConnections = allConnections - freeConnections - acquiringConnections;
     return {
-      acquiringConnections: this.#pool._acquiringConnections.length,
-      allConnections: this.#pool._allConnections.length,
-      freeConnections: this.#pool._freeConnections.length,
-      connectionQueue: this.#pool._connectionQueue.length,
+      acquiringConnections,
+      allConnections,
+      freeConnections,
+      connectionQueue,
+      busyConnections,
     };
   }
 
