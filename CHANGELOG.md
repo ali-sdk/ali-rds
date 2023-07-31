@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.0](https://github.com/ali-sdk/ali-rds/compare/v6.2.0...v6.3.0) (2023-07-31)
+
+
+### Features
+
+* stats 增加使用中的连接数 ([#115](https://github.com/ali-sdk/ali-rds/issues/115)) ([2b152a1](https://github.com/ali-sdk/ali-rds/commit/2b152a14b39291665c74910f2fe803d8318843db))
+
 ## [6.2.0](https://github.com/ali-sdk/ali-rds/compare/v6.1.0...v6.2.0) (2023-06-10)
 
 
