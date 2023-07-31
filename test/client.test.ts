@@ -1340,11 +1340,11 @@ describe('test/client.test.ts', () => {
   describe('get stats()', () => {
     it('should get client stats', async () => {
       const stats = db.stats;
-      console.log(stats);
       assert.equal(typeof stats.acquiringConnections, 'number');
       assert.equal(typeof stats.allConnections, 'number');
       assert.equal(typeof stats.freeConnections, 'number');
       assert.equal(typeof stats.connectionQueue, 'number');
+      assert.equal(typeof stats.busyConnections, 'number');
     });
   });
 
