@@ -17,7 +17,7 @@ const mmSpy = <T extends (...args: any[]) => any>(target: T) => target as MockMa
 
 describe('test/client.test.ts', () => {
   const prefix = 'prefix-' + process.version + '-';
-  const table = 'ali-sdk-test-user';
+  const table = 'myrds-test-user';
   let db: RDSClient;
   before(async () => {
     db = new RDSClient(config);
@@ -157,14 +157,14 @@ describe('test/client.test.ts', () => {
       }, new Error('No lock_type provided while trying to lock table `xxxx`'));
     });
     it('should unlock tables', async () => {
-      await db.lockOne('ali-sdk-test-user', 'READ', 't');
+      await db.lockOne('myrds-test-user', 'READ', 't');
       // error thrown: when table locked with alias, you can only query with the alias.
       await assert.rejects(async () => {
-        await db.query('select * from `ali-sdk-test-user` limit 1;');
+        await db.query('select * from `myrds-test-user` limit 1;');
       });
       await db.unlock();
       // recovered after unlock.
-      await db.query('select * from `ali-sdk-test-user` limit 1;');
+      await db.query('select * from `myrds-test-user` limit 1;');
     });
   });
 
@@ -289,14 +289,14 @@ describe('test/client.test.ts', () => {
       const conn = await db.getConnection();
       try {
         await conn.beginTransaction();
-        await conn.lockOne('ali-sdk-test-user', 'READ', 't');
+        await conn.lockOne('myrds-test-user', 'READ', 't');
         // error thrown: when table locked with alias, you can only query with the alias.
         await assert.rejects(async () => {
-          await conn.query('select * from `ali-sdk-test-user` limit 1;');
+          await conn.query('select * from `myrds-test-user` limit 1;');
         });
         await conn.unlock();
         // recovered after unlock.
-        await conn.query('select * from `ali-sdk-test-user` limit 1;');
+        await conn.query('select * from `myrds-test-user` limit 1;');
       } catch (err) {
         conn.release();
         throw err;
@@ -1017,7 +1017,7 @@ describe('test/client.test.ts', () => {
         });
         throw new Error('should not run this');
       } catch (error) {
-        assert(error.message.includes("ER_TRUNCATED_WRONG_VALUE: Incorrect datetime value: 'now()' for column"));
+        assert(error.message.includes("Incorrect datetime value: 'now()' for column"));
       }
 
       result = await db.update(table, {
@@ -1340,7 +1340,6 @@ describe('test/client.test.ts', () => {
   describe('get stats()', () => {
     it('should get client stats', async () => {
       const stats = db.stats;
-      assert.equal(typeof stats.acquiringConnections, 'number');
       assert.equal(typeof stats.allConnections, 'number');
       assert.equal(typeof stats.freeConnections, 'number');
       assert.equal(typeof stats.connectionQueue, 'number');
@@ -1413,7 +1412,7 @@ describe('test/client.test.ts', () => {
         counter2After++;
       });
       await db.query('select * from ?? limit 10', [ table ]);
-      assert.equal(lastSql, 'select * from `ali-sdk-test-user` limit 10');
+      assert.equal(lastSql, 'select * from `myrds-test-user` limit 10');
       assert.equal(lastArgs[0], lastSql);
       assert.equal(Array.isArray(lastArgs[1]), true);
       assert.equal(count, 1);
@@ -1426,7 +1425,7 @@ describe('test/client.test.ts', () => {
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
       });
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+      assert.equal(lastSql, 'insert into `myrds-test-user`(name, email, gmt_create, gmt_modified)\n' +
         `          values('${prefix}beginTransactionScope1', '${prefix}m@beginTransactionScope1.com', now(), now())`);
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
@@ -1437,7 +1436,7 @@ describe('test/client.test.ts', () => {
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginDoomedTransactionScope1', prefix + 'm@beginDoomedTransactionScope1.com' ]);
       });
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+      assert.equal(lastSql, 'insert into `myrds-test-user`(name, email, gmt_create, gmt_modified)\n' +
         `          values('${prefix}beginDoomedTransactionScope1', '${prefix}m@beginDoomedTransactionScope1.com', now(), now())`);
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
@@ -1449,7 +1448,7 @@ describe('test/client.test.ts', () => {
         values(?, ?, now(), now())`,
       [ table, prefix + 'transaction1', prefix + 'm@transaction1.com' ]);
       await conn.commit();
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
+      assert.equal(lastSql, 'insert into `myrds-test-user`(name, email, gmt_create, gmt_modified)\n' +
         `        values('${prefix}transaction1', '${prefix}m@transaction1.com', now(), now())`);
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);

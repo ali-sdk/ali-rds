@@ -1,7 +1,7 @@
 {
-  "name": "ali-rds",
-  "version": "6.3.0",
-  "description": "Aliyun RDS client",
+  "name": "myrds",
+  "version": "7.0.0",
+  "description": "My RDS Client",
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
   "files": [
@@ -30,17 +30,18 @@
     "mm": "^3.3.0",
     "typescript": "^5.1.3"
   },
-  "homepage": "https://github.com/ali-sdk/ali-rds",
+  "homepage": "https://github.com/node-modules/myrds",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ali-sdk/ali-rds.git"
+    "url": "git://github.com/node-modules/myrds.git"
   },
   "bugs": {
-    "url": "https://github.com/ali-sdk/ali-rds/issues"
+    "url": "https://github.com/node-modules/myrds/issues"
   },
   "keywords": [
-    "ali-rds",
-    "mysql"
+    "myrds",
+    "mysql",
+    "mysql2"
   ],
   "engines": {
     "node": ">= 16.17.0"

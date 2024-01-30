@@ -4,13 +4,13 @@ import type { RDSClient } from './client';
 
 export default {
   // pool events https://github.com/mysqljs/mysql#pool-events
-  connectionNew: diagnosticsChannel.channel('ali-rds:connection:new'),
-  connectionAcquire: diagnosticsChannel.channel('ali-rds:connection:acquire'),
-  connectionRelease: diagnosticsChannel.channel('ali-rds:connection:release'),
-  connectionEnqueue: diagnosticsChannel.channel('ali-rds:connection:enqueue'),
+  connectionNew: diagnosticsChannel.channel('myrds:connection:new'),
+  connectionAcquire: diagnosticsChannel.channel('myrds:connection:acquire'),
+  connectionRelease: diagnosticsChannel.channel('myrds:connection:release'),
+  connectionEnqueue: diagnosticsChannel.channel('myrds:connection:enqueue'),
   // query
-  queryStart: diagnosticsChannel.channel('ali-rds:query:start'),
-  queryEnd: diagnosticsChannel.channel('ali-rds:query:end'),
+  queryStart: diagnosticsChannel.channel('myrds:query:start'),
+  queryEnd: diagnosticsChannel.channel('myrds:query:end'),
 };
 
 export interface ConnectionMessage {

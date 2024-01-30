@@ -9,7 +9,7 @@ import type { ConnectionMessage, QueryEndMessage } from '../src/channels';
 
 describe('test/PoolConfig.test.ts', () => {
   const prefix = 'prefix-PoolConfig' + process.version + '-';
-  const table = 'ali-sdk-test-user';
+  const table = 'myrds-test-user';
   let db: RDSClient;
   let index = 0;
   let newConnectionCount = 0;
@@ -19,13 +19,13 @@ describe('test/PoolConfig.test.ts', () => {
   let end = false;
 
   before(async () => {
-    diagnosticsChannel.subscribe('ali-rds:connection:new', message => {
+    diagnosticsChannel.subscribe('myrds:connection:new', message => {
       if (end) return;
       const { connection } = message as ConnectionMessage;
       console.log('[diagnosticsChannel] connection threadId %o created', connection.threadId);
       newConnectionCountByDiagnosticsChannel++;
     });
-    diagnosticsChannel.subscribe('ali-rds:query:end', message => {
+    diagnosticsChannel.subscribe('myrds:query:end', message => {
       if (end) return;
       const { connection, sql, duration, error } = message as QueryEndMessage;
       console.log('[diagnosticsChannel] connection threadId %o query %o, duration: %oms, error: %o',
@@ -79,7 +79,7 @@ describe('test/PoolConfig.test.ts', () => {
 
   describe('new RDSClient(options.getConnectionConfig)', () => {
     it('should get connection config from newConnectionConfig()', async () => {
-      assert.equal(db.pool.config.connectionConfig.database, undefined);
+      assert.equal(db.pool.config.database, undefined);
       assert.equal(index, 1);
       assert.equal((db.pool.config as any).newConnectionConfig().database, config.database);
       assert.equal(index, 2);

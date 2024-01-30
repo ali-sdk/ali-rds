@@ -13,7 +13,7 @@ import {
 import channels from './channels';
 import type { QueryStartMessage, QueryEndMessage } from './channels';
 
-const debug = debuglog('ali-rds:operator');
+const debug = debuglog('myrds:operator');
 
 /**
  * Operator Interface
@@ -328,7 +328,7 @@ export abstract class Operator {
      *  {id: 3, name: 'fengmk23', email: 'm@fengmk23.com'},
      * ])
      *
-     * UPDATE `ali-sdk-test-user` SET
+     * UPDATE `myrds-test-user` SET
      *  `name` =
      *    CASE
      *      WHEN  `id` = 1 THEN 'fengmk21'

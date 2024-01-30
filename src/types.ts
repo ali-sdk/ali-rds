@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import type { PoolConnection,PoolOptions, ConnectionConfig } from 'mysql2';
 import { RDSTransaction } from './transaction';
 
-export type GetConnectionConfig = () => ConnectionConfig;
+export type GetConnectionConfig = () => Partial<ConnectionConfig>;
 
 export interface RDSClientOptions extends PoolOptions {
   connectionStorageKey?: string;

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ali-sdk-test-user` (
+CREATE TABLE IF NOT EXISTS `myrds-test-user` (
  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'primary key',
  `gmt_create` datetime NOT NULL COMMENT 'create time' DEFAULT NOW(),
  `gmt_modified` datetime NOT NULL COMMENT 'modified time' DEFAULT NOW(),
