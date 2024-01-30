@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import { SqlString } from '../src/sqlstring';
 import literals, { Literal } from '../src/literals';
 

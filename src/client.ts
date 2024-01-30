@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { promisify } from 'node:util';
-import mysql from 'mysql';
-import type { Pool } from 'mysql';
+import mysql from 'mysql2/promise';
+import type { Pool } from 'mysql2';
 import type { PoolConnectionPromisify, RDSClientOptions, TransactionContext, TransactionScope } from './types';
 import { Operator } from './operator';
 import { RDSConnection } from './connection';
