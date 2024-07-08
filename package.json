@@ -8,7 +8,6 @@
     "lib"
   ],
   "scripts": {
-    "contributor": "git-contributor",
     "test": "egg-bin test",
     "ci": "npm run lint && egg-bin cov && npm run prepublishOnly",
     "lint": "eslint src test --cache",
@@ -26,8 +25,7 @@
     "@types/node": "^20.2.5",
     "egg-bin": "^6.1.2",
     "eslint": "^8.29.0",
-    "eslint-config-egg": "^12.1.0",
-    "git-contributor": "^2.0.0",
+    "eslint-config-egg": "14",
     "mm": "^3.3.0",
     "typescript": "^5.1.3"
   },
