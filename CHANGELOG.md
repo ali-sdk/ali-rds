@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.0](https://github.com/ali-sdk/ali-rds/compare/v6.3.0...v6.4.0) (2024-07-08)
+
+
+### Features
+
+* support literal in where options ([#118](https://github.com/ali-sdk/ali-rds/issues/118)) ([271bd68](https://github.com/ali-sdk/ali-rds/commit/271bd681823613396e8171f4438f0c36ebe656c4))
+
 ## [6.3.0](https://github.com/ali-sdk/ali-rds/compare/v6.2.0...v6.3.0) (2023-07-31)
 
 
