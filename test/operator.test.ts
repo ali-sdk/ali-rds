@@ -1,5 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { Operator } from '../src/operator';
+import { Literal } from '../src/literals';
 
 class CustomOperator extends Operator {}
 
@@ -21,6 +22,7 @@ describe('test/operator.test.ts', () => {
       assert.equal(op._where({ id: 1, name: 'foo\'\"' }), ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\'');
       assert.equal(op._where({ id: 1, name: 'foo\'\"', user: 'fengmk2' }),
         ' WHERE `id` = 1 AND `name` = \'foo\\\'\\\"\' AND `user` = \'fengmk2\'');
+      assert.equal(op._where({ name: new Literal('IS NOT NULL') }), ' WHERE `name` IS NOT NULL');
     });
   });
 

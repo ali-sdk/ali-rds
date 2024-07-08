@@ -81,7 +81,7 @@ describe('test/client.test.ts', () => {
 
   describe('query(), queryOne()', () => {
     before(async () => {
-      await db.query(`insert into ??(name, email, gmt_create, gmt_modified) 
+      await db.query(`insert into ??(name, email, gmt_create, gmt_modified)
         values(?, ?, now(), now())`, [ table, prefix + 'fengmk2', prefix + 'm@fengmk2.com' ]);
       await db.query(`insert into ??(name, email, gmt_create, gmt_modified)
         values(?, ?, now(), now())`, [ table, prefix + 'fengmk3', prefix + 'm@fengmk2.com' ]);
