@@ -436,14 +436,8 @@ const row = await db.get('table-name', { deletedAt: new db.literals.Literal('IS 
 
 [MIT](LICENSE)
 
-<!-- GITCONTRIBUTOR_START -->
-
 ## Contributors
 
-|[<img src="https://avatars.githubusercontent.com/u/156269?v=4" width="100px;"/><br/><sub><b>fengmk2</b></sub>](https://github.com/fengmk2)<br/>|[<img src="https://avatars.githubusercontent.com/u/985607?v=4" width="100px;"/><br/><sub><b>dead-horse</b></sub>](https://github.com/dead-horse)<br/>|[<img src="https://avatars.githubusercontent.com/u/32174276?v=4" width="100px;"/><br/><sub><b>semantic-release-bot</b></sub>](https://github.com/semantic-release-bot)<br/>|[<img src="https://avatars.githubusercontent.com/u/6587734?v=4" width="100px;"/><br/><sub><b>AntiMoron</b></sub>](https://github.com/AntiMoron)<br/>|[<img src="https://avatars.githubusercontent.com/u/10287125?v=4" width="100px;"/><br/><sub><b>nodejh</b></sub>](https://github.com/nodejh)<br/>|[<img src="https://avatars.githubusercontent.com/u/4192962?v=4" width="100px;"/><br/><sub><b>fangk</b></sub>](https://github.com/fangk)<br/>|
-| :---: | :---: | :---: | :---: | :---: | :---: |
-[<img src="https://avatars.githubusercontent.com/u/1619030?v=4" width="100px;"/><br/><sub><b>xujihui1985</b></sub>](https://github.com/xujihui1985)<br/>|[<img src="https://avatars.githubusercontent.com/u/1468366?v=4" width="100px;"/><br/><sub><b>csbun</b></sub>](https://github.com/csbun)<br/>|[<img src="https://avatars.githubusercontent.com/u/360661?v=4" width="100px;"/><br/><sub><b>popomore</b></sub>](https://github.com/popomore)<br/>|[<img src="https://avatars.githubusercontent.com/u/12378108?v=4" width="100px;"/><br/><sub><b>hoythan</b></sub>](https://github.com/hoythan)<br/>|[<img src="https://avatars.githubusercontent.com/u/35927028?v=4" width="100px;"/><br/><sub><b>deadhorse123</b></sub>](https://github.com/deadhorse123)<br/>|[<img src="https://avatars.githubusercontent.com/u/6897780?v=4" width="100px;"/><br/><sub><b>killagu</b></sub>](https://github.com/killagu)<br/>
+[![Contributors](https://contrib.rocks/image?repo=ali-sdk/ali-rds)](https://github.com/ali-sdk/ali-rds/graphs/contributors)
 
-This project follows the git-contributor [spec](https://github.com/xudafeng/git-contributor), auto updated at `Sat Mar 04 2023 18:57:33 GMT+0800`.
-
-<!-- GITCONTRIBUTOR_END -->
+Made with [contributors-img](https://contrib.rocks).
