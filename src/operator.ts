@@ -366,6 +366,8 @@ export abstract class Operator {
       const value = where[key];
       if (Array.isArray(value)) {
         wheres.push('?? IN (?)');
+      } else if (value instanceof literals.Literal) {
+        wheres.push('?? ?');
       } else {
         if (value === null || value === undefined) {
           wheres.push('?? IS ?');

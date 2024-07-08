@@ -201,7 +201,7 @@ const options = [{
     email: 'm@fengmk2_2.com',
     otherField: 'other field value2',
     modifiedAt: db.literals.now, // `now()` on db server
-  }, 
+  },
   where: {
     id: 124,
     name: 'fengmk2_2',
@@ -406,6 +406,12 @@ INSERT INTO `user` SET `name` = 'fengmk2', `createdAt` = now()
 
 ```js
 const session = new db.literals.Literal('session()');
+```
+
+```js
+const row = await db.get('table-name', { deletedAt: new db.literals.Literal('IS NOT NULL') });
+
+=> SELECT * FROM `table-name` WHERE `deletedAt` IS NOT NULL
 ```
 
 ## Class Relation
