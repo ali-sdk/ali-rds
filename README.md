@@ -48,6 +48,13 @@ const db = new RDSClient({
   // connectionStorage: new AsyncLocalStorage(),
   // If create multiple RDSClient instances with the same connectionStorage, use this key to distinguish between the instances
   // connectionStorageKey: 'datasource',
+  
+  // The timeout for connecting to the MySQL server. (Default: 500 milliseconds)
+  // connectTimeout: 500,
+
+  // The timeout for waiting for a connection from the connection pool. (Default: 500 milliseconds)
+  // So max timeout for get a connection is (connectTimeout + poolWaitTimeout)
+  // poolWaitTimeout: 500,
 });
 ```
 

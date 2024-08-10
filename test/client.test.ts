@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs/promises';
+import { setTimeout } from 'node:timers/promises';
 import path from 'node:path';
 import mm from 'mm';
 import { RDSTransaction } from '../src/transaction';
@@ -298,8 +299,9 @@ describe('test/client.test.ts', () => {
         // recovered after unlock.
         await conn.query('select * from `ali-sdk-test-user` limit 1;');
       } catch (err) {
-        conn.release();
         throw err;
+      } finally {
+        conn.release();
       }
     });
 
@@ -353,7 +355,8 @@ describe('test/client.test.ts', () => {
     });
 
     it('should throw rollback error with cause error when rollback failed', async () => {
-      mm(RDSTransaction.prototype, 'rollback', async () => {
+      mm(RDSTransaction.prototype, 'rollback', async function(this: RDSTransaction) {
+        this.conn!.release();
         throw new Error('fake rollback error');
       });
       await assert.rejects(
@@ -501,7 +504,9 @@ describe('test/client.test.ts', () => {
         });
       };
 
-      const [ p1Res, p2Res ] = await Promise.all([ p1(), p2().catch(err => err) ]);
+      const [ p1Res, p2Res ] = await Promise.all([ p1(), p2().catch(err => {
+        return err;
+      }) ]);
       assert.strictEqual(p1Res, true);
       assert.strictEqual(p2Res.code, 'ER_PARSE_ERROR');
       const rows = await db.query('select * from ?? where email=? order by id',
@@ -1457,5 +1462,99 @@ describe('test/client.test.ts', () => {
       assert.equal(counter2Before, 4);
       assert.equal(counter2After, 4);
     });
+  });
+
+  describe('PoolWaitTimeout', () => {
+    async function longQuery(timeout?: number) {
+      await db.beginTransactionScope(async conn => {
+        await setTimeout(timeout ?? 1000);
+        await conn.query('SELECT 1+1');
+      });
+    }
+
+    it('should throw error if pool wait timeout', async () => {
+      const tasks: Array<Promise<void>> = [];
+      for (let i = 0; i < 10; i++) {
+        tasks.push(longQuery());
+      }
+      const tasksPromise = Promise.all(tasks);
+      await assert.rejects(async () => {
+        await longQuery();
+      }, /get connection timeout after/);
+      await tasksPromise;
+    });
+
+    it('should release conn to pool', async () => {
+      const tasks: Array<Promise<void>> = [];
+      const timeoutTasks: Array<Promise<void>> = [];
+      // 1. fill the pool
+      for (let i = 0; i < 10; i++) {
+        tasks.push(longQuery());
+      }
+      // 2. add more conn and wait for timeout
+      for (let i = 0; i < 10; i++) {
+        timeoutTasks.push(longQuery());
+      }
+      const [ succeedTasks, failedTasks ] = await Promise.all([
+        Promise.allSettled(tasks),
+        Promise.allSettled(timeoutTasks),
+      ]);
+      const succeedCount = succeedTasks.filter(t => t.status === 'fulfilled').length;
+      assert.equal(succeedCount, 10);
+
+      const failedCount = failedTasks.filter(t => t.status === 'rejected').length;
+      assert.equal(failedCount, 10);
+
+      // 3. after pool empty, create new tasks
+      const retryTasks: Array<Promise<void>> = [];
+      for (let i = 0; i < 10; i++) {
+        retryTasks.push(longQuery());
+      }
+      await Promise.all(retryTasks);
+    });
+
+    it('should not wait too long', async () => {
+      const tasks: Array<Promise<void>> = [];
+      const timeoutTasks: Array<Promise<void>> = [];
+      const fastTasks: Array<Promise<void>> = [];
+      const start = performance.now();
+      // 1. fill the pool
+      for (let i = 0; i < 10; i++) {
+        tasks.push(longQuery());
+      }
+      const tasksPromise = Promise.allSettled(tasks);
+      // 2. add more conn and wait for timeout
+      for (let i = 0; i < 10; i++) {
+        timeoutTasks.push(longQuery());
+      }
+      const timeoutTasksPromise = Promise.allSettled(timeoutTasks);
+      await setTimeout(600);
+      // 3. add fast query
+      for (let i = 0; i < 10; i++) {
+        fastTasks.push(longQuery(1));
+      }
+      const fastTasksPromise = Promise.allSettled(fastTasks);
+      const [ succeedTasks, failedTasks, fastTaskResults ] = await Promise.all([
+        tasksPromise,
+        timeoutTasksPromise,
+        fastTasksPromise,
+      ]);
+      const duration = performance.now() - start;
+      const succeedCount = succeedTasks.filter(t => t.status === 'fulfilled').length;
+      assert.equal(succeedCount, 10);
+
+      const failedCount = failedTasks.filter(t => t.status === 'rejected').length;
+      assert.equal(failedCount, 10);
+
+      const faskTaskSucceedCount = fastTaskResults.filter(t => t.status === 'fulfilled').length;
+      assert.equal(faskTaskSucceedCount, 10);
+
+      // - 10 long queries cost 1000ms
+      // - 10 timeout queries should be timeout in long query execution so not cost time
+      // - 10 fast queries wait long query to finish, cost 1ms
+      // 1000ms + 0ms + 1ms < 1100ms
+      assert(duration < 1100);
+    });
+
   });
 });

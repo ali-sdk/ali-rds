@@ -7,7 +7,8 @@ export type GetConnectionConfig = () => ConnectionConfig;
 export interface RDSClientOptions extends PoolConfig {
   connectionStorageKey?: string;
   connectionStorage?: AsyncLocalStorage<Record<PropertyKey, RDSTransaction>>;
-  getConnectionConfig?: GetConnectionConfig
+  getConnectionConfig?: GetConnectionConfig;
+  poolWaitTimeout?: number;
 }
 
 export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {

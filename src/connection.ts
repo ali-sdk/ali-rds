@@ -1,3 +1,4 @@
+import assert from 'node:assert';
 import { promisify } from 'node:util';
 import { Operator } from './operator';
 import type { PoolConnectionPromisify } from './types';
@@ -6,8 +7,11 @@ const kWrapToRDS = Symbol('kWrapToRDS');
 
 export class RDSConnection extends Operator {
   conn: PoolConnectionPromisify;
+  #released: boolean;
+
   constructor(conn: PoolConnectionPromisify) {
     super(conn);
+    this.#released = false;
     this.conn = conn;
     if (!this.conn[kWrapToRDS]) {
       [
@@ -23,6 +27,8 @@ export class RDSConnection extends Operator {
   }
 
   release() {
+    assert(!this.#released, 'connection was released');
+    this.#released = true;
     return this.conn.release();
   }
 
