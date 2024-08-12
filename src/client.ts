@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { promisify } from 'node:util';
+import { setTimeout } from 'node:timers/promises';
 import mysql from 'mysql';
 import type { Pool } from 'mysql';
 import type { PoolConnectionPromisify, RDSClientOptions, TransactionContext, TransactionScope } from './types';
@@ -10,11 +11,17 @@ import { RDSPoolConfig } from './PoolConfig';
 import literals from './literals';
 import channels from './channels';
 import type { ConnectionMessage, ConnectionEnqueueMessage } from './channels';
+import { PoolWaitTimeoutError } from './util/PoolWaitTimeout';
+
+export * from './types';
 
 interface PoolPromisify extends Omit<Pool, 'query'> {
   query(sql: string): Promise<any>;
+
   getConnection(): Promise<PoolConnectionPromisify>;
+
   end(): Promise<void>;
+
   _acquiringConnections: any[];
   _allConnections: any[];
   _freeConnections: any[];
@@ -22,11 +29,25 @@ interface PoolPromisify extends Omit<Pool, 'query'> {
 }
 
 export class RDSClient extends Operator {
-  static get literals() { return literals; }
-  static get escape() { return mysql.escape; }
-  static get escapeId() { return mysql.escapeId; }
-  static get format() { return mysql.format; }
-  static get raw() { return mysql.raw; }
+  static get literals() {
+    return literals;
+  }
+
+  static get escape() {
+    return mysql.escape;
+  }
+
+  static get escapeId() {
+    return mysql.escapeId;
+  }
+
+  static get format() {
+    return mysql.format;
+  }
+
+  static get raw() {
+    return mysql.raw;
+  }
 
   static #DEFAULT_STORAGE_KEY = Symbol('RDSClient#storage#default');
   static #TRANSACTION_NEST_COUNT = Symbol('RDSClient#transaction#nestCount');
@@ -34,9 +55,11 @@ export class RDSClient extends Operator {
   #pool: PoolPromisify;
   #connectionStorage: AsyncLocalStorage<TransactionContext>;
   #connectionStorageKey: string | symbol;
+  #poolWaitTimeout: number;
 
   constructor(options: RDSClientOptions) {
     super();
+    options.connectTimeout = options.connectTimeout ?? 500;
     const { connectionStorage, connectionStorageKey, ...mysqlOptions } = options;
     // get connection options from getConnectionConfig method every time
     if (mysqlOptions.getConnectionConfig) {
@@ -59,6 +82,7 @@ export class RDSClient extends Operator {
     });
     this.#connectionStorage = connectionStorage || new AsyncLocalStorage();
     this.#connectionStorageKey = connectionStorageKey || RDSClient.#DEFAULT_STORAGE_KEY;
+    this.#poolWaitTimeout = options.poolWaitTimeout ?? 500;
     // https://github.com/mysqljs/mysql#pool-events
     this.#pool.on('connection', (connection: PoolConnectionPromisify) => {
       channels.connectionNew.publish({
@@ -113,9 +137,30 @@ export class RDSClient extends Operator {
     };
   }
 
+  async waitPoolConnection(abortSignal: AbortSignal) {
+    const now = performance.now();
+    await setTimeout(this.#poolWaitTimeout, undefined, { signal: abortSignal });
+    return performance.now() - now;
+  }
+
+  async getConnectionWithTimeout() {
+    const connPromise = this.#pool.getConnection();
+    const timeoutAbortController = new AbortController();
+    const timeoutPromise = this.waitPoolConnection(timeoutAbortController.signal);
+    const connOrTimeout = await Promise.race([ connPromise, timeoutPromise ]);
+    if (typeof connOrTimeout === 'number') {
+      connPromise.then(conn => {
+        conn.release();
+      });
+      throw new PoolWaitTimeoutError(`get connection timeout after ${connOrTimeout}ms`);
+    }
+    timeoutAbortController.abort();
+    return connPromise;
+  }
+
   async getConnection() {
     try {
-      const _conn = await this.#pool.getConnection();
+      const _conn = await this.getConnectionWithTimeout();
       const conn = new RDSConnection(_conn);
       if (this.beforeQueryHandlers.length > 0) {
         for (const handler of this.beforeQueryHandlers) {

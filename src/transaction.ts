@@ -1,12 +1,16 @@
 import type { RDSConnection } from './connection';
 import { Operator } from './operator';
 
+let id = 0;
 export class RDSTransaction extends Operator {
   isCommit = false;
   isRollback = false;
   conn: RDSConnection | null;
+  id: number;
+
   constructor(conn: RDSConnection) {
     super(conn.conn);
+    this.id = id++;
     this.conn = conn;
   }
 
