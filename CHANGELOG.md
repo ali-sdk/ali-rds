@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.0](https://github.com/ali-sdk/ali-rds/compare/v6.4.0...v6.5.0) (2024-08-12)
+
+
+### Features
+
+* impl PoolWaitTimeoutError ([#120](https://github.com/ali-sdk/ali-rds/issues/120)) ([7a355d3](https://github.com/ali-sdk/ali-rds/commit/7a355d3032a506518f14d93c8b301108bb0402ee))
+
 ## [6.4.0](https://github.com/ali-sdk/ali-rds/compare/v6.3.0...v6.4.0) (2024-07-08)
 
 
