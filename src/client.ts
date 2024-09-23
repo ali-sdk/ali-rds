@@ -107,6 +107,7 @@ export class RDSClient extends Operator {
         connection,
       } as ConnectionMessage);
     });
+    this.logging = options.logging;
   }
 
   async query<T = any>(sql: string, values?: object | any[]): Promise<T> {
@@ -162,6 +163,7 @@ export class RDSClient extends Operator {
     try {
       const _conn = await this.getConnectionWithTimeout();
       const conn = new RDSConnection(_conn);
+      conn.setLogging(this.logging);
       if (this.beforeQueryHandlers.length > 0) {
         for (const handler of this.beforeQueryHandlers) {
           conn.beforeQuery(handler);

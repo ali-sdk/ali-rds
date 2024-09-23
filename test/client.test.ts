@@ -338,6 +338,30 @@ describe('test/client.test.ts', () => {
     });
   });
 
+  describe('logging', () => {
+    const mockLogs: string[] = [];
+
+    it('should logging sql', async () => {
+      const db = new RDSClient({
+        ...config,
+        logging: (sql, { threadId }) => {
+          assert(typeof threadId === 'number');
+          mockLogs.push(sql);
+        },
+      });
+
+      await db.query('show tables');
+      assert.deepEqual(mockLogs, [ 'show tables' ]);
+      // logging SQL string with variable replaced
+      await db.query('select * from ?? where email = ? limit 1',
+        [ table, prefix + 'm@fengmk2.com' ]);
+      assert.deepEqual(mockLogs, [
+        'show tables',
+        `select * from \`${table}\` where email = '${prefix + 'm@fengmk2.com'}' limit 1`,
+      ]);
+    });
+  });
+
   describe('beginTransactionScope(scope)', () => {
     it('should beginTransactionScope() error', async () => {
       const failDB = new RDSClient({
