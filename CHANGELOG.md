@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.6.0](https://github.com/ali-sdk/ali-rds/compare/v6.5.0...v6.6.0) (2024-09-24)
+
+
+### Features
+
+* add custom logging ([#122](https://github.com/ali-sdk/ali-rds/issues/122)) ([56dcfd4](https://github.com/ali-sdk/ali-rds/commit/56dcfd490b567971f77ef88e063e0cb64e820b37))
+
 ## [6.5.0](https://github.com/ali-sdk/ali-rds/compare/v6.4.0...v6.5.0) (2024-08-12)
 
 
