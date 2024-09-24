@@ -9,6 +9,7 @@ export interface RDSClientOptions extends PoolConfig {
   connectionStorage?: AsyncLocalStorage<Record<PropertyKey, RDSTransaction>>;
   getConnectionConfig?: GetConnectionConfig;
   poolWaitTimeout?: number;
+  logging?: Logging;
 }
 
 export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {
@@ -67,3 +68,5 @@ export type AfterQueryHandler = (sql: string, result: any, execDuration: number,
 
 export type TransactionContext = Record<PropertyKey, RDSTransaction | null>;
 export type TransactionScope = (transaction: RDSTransaction) => Promise<any>;
+
+export type Logging = (message: string, ...args: any[]) => any;

@@ -9,6 +9,7 @@ import {
   SelectOption,
   UpdateOption, UpdateResult, UpdateRow,
   PoolConnectionPromisify,
+  Logging,
 } from './types';
 import channels from './channels';
 import type { QueryStartMessage, QueryEndMessage } from './channels';
@@ -20,6 +21,8 @@ const debug = debuglog('ali-rds:operator');
  */
 export abstract class Operator {
   #connection: PoolConnectionPromisify;
+  logging?: Logging;
+
   constructor(connection?: PoolConnectionPromisify) {
     if (connection) {
       this.#connection = connection;
@@ -41,6 +44,10 @@ export abstract class Operator {
 
   afterQuery(afterQueryHandler: AfterQueryHandler) {
     this.afterQueryHandlers.push(afterQueryHandler);
+  }
+
+  setLogging(logging?: Logging) {
+    this.logging = logging;
   }
 
   escape(value: any, stringifyObjects?: boolean, timeZone?: string): string {
@@ -80,6 +87,9 @@ export abstract class Operator {
       }
     }
     debug('[connection#%s] query %o', this.threadId, sql);
+    if (typeof this.logging === 'function') {
+      this.logging(sql, { threadId: this.threadId });
+    }
     const queryStart = performance.now();
     let rows: any;
     let lastError: Error | undefined;
