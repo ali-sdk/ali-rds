@@ -1,5 +1,11 @@
 # Changelog
 
+## <small>6.6.1 (2025-10-23)</small>
+
+* fix: add catch for get conn exception (#123) ([897c866](https://github.com/ali-sdk/ali-rds/commit/897c866)), closes [#123](https://github.com/ali-sdk/ali-rds/issues/123)
+* chore: enable auto merge ([a5e452e](https://github.com/ali-sdk/ali-rds/commit/a5e452e))
+* chore: fix release workflow yml ([4459896](https://github.com/ali-sdk/ali-rds/commit/4459896))
+
 ## [6.6.0](https://github.com/ali-sdk/ali-rds/compare/v6.5.0...v6.6.0) (2024-09-24)
 
 
