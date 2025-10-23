@@ -157,7 +157,6 @@ export class RDSClient extends Operator {
         const logger = getLogger();
         e.message = 'get conn failed after timeout: ' + e.message;
         logger.warn(e);
-        // ... do nothing, make sure has no unhandledRejectionError
       });
       throw new PoolWaitTimeoutError(`get connection timeout after ${connOrTimeout}ms`);
     }
