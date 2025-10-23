@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { setTimeout } from 'node:timers/promises';
 import mysql from 'mysql';
 import type { Pool } from 'mysql';
+import { getLogger } from 'onelogger';
 import type { PoolConnectionPromisify, RDSClientOptions, TransactionContext, TransactionScope } from './types';
 import { Operator } from './operator';
 import { RDSConnection } from './connection';
@@ -152,7 +153,10 @@ export class RDSClient extends Operator {
     if (typeof connOrTimeout === 'number') {
       connPromise.then(conn => {
         conn.release();
-      }).catch(() => {
+      }).catch(e => {
+        const logger = getLogger();
+        e.message = 'get conn failed after timeout: ' + e.message;
+        logger.warn(e);
         // ... do nothing, make sure has no unhandledRejectionError
       });
       throw new PoolWaitTimeoutError(`get connection timeout after ${connOrTimeout}ms`);
