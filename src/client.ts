@@ -153,7 +153,7 @@ export class RDSClient extends Operator {
       connPromise.then(conn => {
         conn.release();
       }).catch(() => {
-        // ... do nothing, make unsure has no unhandledRejectionError
+        // ... do nothing, make sure has no unhandledRejectionError
       });
       throw new PoolWaitTimeoutError(`get connection timeout after ${connOrTimeout}ms`);
     }
