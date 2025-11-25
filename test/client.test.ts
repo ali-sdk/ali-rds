@@ -357,7 +357,7 @@ describe('test/client.test.ts', () => {
         [ table, prefix + 'm@fengmk2.com' ]);
       assert.deepEqual(mockLogs, [
         'show tables',
-        `select * from \`${table}\` where email = '${prefix + 'm@fengmk2.com'}' limit 1`,
+        'select * from ?? where email = ? limit 1',
       ]);
     });
   });
@@ -1442,7 +1442,7 @@ describe('test/client.test.ts', () => {
         counter2After++;
       });
       await db.query('select * from ?? limit 10', [ table ]);
-      assert.equal(lastSql, 'select * from `ali-sdk-test-user` limit 10');
+      assert.equal(lastSql, 'select * from ?? limit 10');
       assert.equal(lastArgs[0], lastSql);
       assert.equal(Array.isArray(lastArgs[1]), true);
       assert.equal(count, 1);
@@ -1455,8 +1455,8 @@ describe('test/client.test.ts', () => {
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginTransactionScope1', prefix + 'm@beginTransactionScope1.com' ]);
       });
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
-        `          values('${prefix}beginTransactionScope1', '${prefix}m@beginTransactionScope1.com', now(), now())`);
+      assert.equal(lastSql, 'insert into ??(name, email, gmt_create, gmt_modified)\n' +
+        '          values(?, ?, now(), now())');
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
       assert.equal(count, 2);
@@ -1466,8 +1466,8 @@ describe('test/client.test.ts', () => {
           values(?, ?, now(), now())`,
         [ table, prefix + 'beginDoomedTransactionScope1', prefix + 'm@beginDoomedTransactionScope1.com' ]);
       });
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
-        `          values('${prefix}beginDoomedTransactionScope1', '${prefix}m@beginDoomedTransactionScope1.com', now(), now())`);
+      assert.equal(lastSql, 'insert into ??(name, email, gmt_create, gmt_modified)\n' +
+        '          values(?, ?, now(), now())');
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
       assert.equal(count, 3);
@@ -1478,8 +1478,8 @@ describe('test/client.test.ts', () => {
         values(?, ?, now(), now())`,
       [ table, prefix + 'transaction1', prefix + 'm@transaction1.com' ]);
       await conn.commit();
-      assert.equal(lastSql, 'insert into `ali-sdk-test-user`(name, email, gmt_create, gmt_modified)\n' +
-        `        values('${prefix}transaction1', '${prefix}m@transaction1.com', now(), now())`);
+      assert.equal(lastSql, 'insert into ??(name, email, gmt_create, gmt_modified)\n' +
+        '        values(?, ?, now(), now())');
       assert.equal(lastArgs[0], lastSql);
       assert.equal(lastArgs[1].affectedRows, 1);
       assert.equal(count, 4);

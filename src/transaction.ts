@@ -36,9 +36,9 @@ export class RDSTransaction extends Operator {
     }
   }
 
-  protected async _query(sql: string) {
+  protected async _query(sql: string, values?: object | any[]) {
     this.#check();
-    return await this.conn!._query(sql);
+    return await this.conn!._query(sql, values);
   }
 
   #check() {

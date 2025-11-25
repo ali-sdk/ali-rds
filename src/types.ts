@@ -13,7 +13,7 @@ export interface RDSClientOptions extends PoolConfig {
 }
 
 export interface PoolConnectionPromisify extends Omit<PoolConnection, 'query'> {
-  query(sql: string): Promise<any>;
+  query(sql: string, values?: object | any[]): Promise<any>;
   beginTransaction(): Promise<void>;
   commit(): Promise<void>;
   rollback(): Promise<void>;
@@ -63,8 +63,8 @@ export type LockTableOption = {
   tableAlias: string;
 };
 
-export type BeforeQueryHandler = (sql: string) => string | undefined | void;
-export type AfterQueryHandler = (sql: string, result: any, execDuration: number, err?: Error) => void;
+export type BeforeQueryHandler = (sql: string, values?: object | any[]) => string | undefined | void;
+export type AfterQueryHandler = (sql: string, result: any, execDuration: number, err?: Error, values?: object | any[]) => void;
 
 export type TransactionContext = Record<PropertyKey, RDSTransaction | null>;
 export type TransactionScope = (transaction: RDSTransaction) => Promise<any>;
