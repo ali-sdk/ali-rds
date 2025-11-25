@@ -1,5 +1,9 @@
 # Changelog
 
+## 6.7.0 (2025-11-25)
+
+* feat: use sql params (#124) ([1209a53](https://github.com/ali-sdk/ali-rds/commit/1209a53)), closes [#124](https://github.com/ali-sdk/ali-rds/issues/124)
+
 ## <small>6.6.1 (2025-10-23)</small>
 
 * fix: add catch for get conn exception (#123) ([897c866](https://github.com/ali-sdk/ali-rds/commit/897c866)), closes [#123](https://github.com/ali-sdk/ali-rds/issues/123)
