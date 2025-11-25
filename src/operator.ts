@@ -74,13 +74,9 @@ export abstract class Operator {
   }
 
   async query<T = any>(sql: string, values?: object | any[]): Promise<T> {
-    // query(sql, values)
-    if (values) {
-      sql = this.format(sql, values);
-    }
     if (this.beforeQueryHandlers.length > 0) {
       for (const beforeQueryHandler of this.beforeQueryHandlers) {
-        const newSql = beforeQueryHandler(sql);
+        const newSql = beforeQueryHandler(sql, values);
         if (newSql) {
           sql = newSql;
         }
@@ -95,10 +91,11 @@ export abstract class Operator {
     let lastError: Error | undefined;
     channels.queryStart.publish({
       sql,
+      values,
       connection: this.#connection,
     } as QueryStartMessage);
     try {
-      rows = await this._query(sql);
+      rows = await this._query(sql, values);
       if (Array.isArray(rows)) {
         debug('[connection#%s] query get %o rows', this.threadId, rows.length);
       } else {
@@ -116,11 +113,12 @@ export abstract class Operator {
         sql,
         connection: this.#connection,
         duration,
+        values,
         error: lastError,
       } as QueryEndMessage);
       if (this.afterQueryHandlers.length > 0) {
         for (const afterQueryHandler of this.afterQueryHandlers) {
-          afterQueryHandler(sql, rows, duration, lastError);
+          afterQueryHandler(sql, rows, duration, lastError, values);
         }
       }
     }
@@ -132,7 +130,7 @@ export abstract class Operator {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async _query(_sql: string): Promise<any> {
+  protected async _query(_sql: string, _values?: object | any[]): Promise<any> {
     throw new Error('SubClass must impl this');
   }
 

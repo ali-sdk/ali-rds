@@ -24,11 +24,13 @@ export interface ConnectionEnqueueMessage {
 
 export interface QueryStartMessage {
   connection: PoolConnectionPromisify;
+  values?: object | any[];
   sql: string;
 }
 
 export interface QueryEndMessage {
   connection: PoolConnectionPromisify;
+  values?: object | any[];
   sql: string;
   duration: number;
   error?: Error;
